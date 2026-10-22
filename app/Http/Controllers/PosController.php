@@ -47,6 +47,7 @@ class PosController extends Controller
                 ->with('table')->latest()->limit(30)->get(),
             'branch' => $this->branch(),
             'accounts' => app(\App\Domain\Finance\AccountService::class)->optionsFor($this->branchId()),
+            'gatewayChannels' => ($gw = app(\App\Domain\Payments\GatewayService::class))->channelOptions($gw->active()),
         ]);
     }
 

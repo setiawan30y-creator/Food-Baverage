@@ -53,6 +53,7 @@
       ['settings.theme', 'Tema', 'sun', 'settings', 'settings.theme'],
       ['settings.branches', 'Cabang', 'pin', 'settings', 'settings.branches'],
       ['settings.users', 'Pengguna', 'users', 'settings', 'settings.users'],
+      ['settings.integrations', 'Integrasi', 'shield', 'settings', 'settings.integrations'],
       ['subscription.index', 'Langganan', 'wallet', 'settings', 'subscription.*'],
     ],
   ];

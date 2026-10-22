@@ -103,7 +103,7 @@ class TableLayoutTest extends TestCase
             '/cashier', '/closings', '/closings/'.$id(CashClosing::class),
             '/employees', '/schedule', '/attendance', '/leaves', '/payroll', '/payroll/'.$id(PayrollRun::class), '/my/payslips',
             "/reports/sales?from={$from}&to={$to}", "/reports/menu?from={$from}&to={$to}", "/reports/stock?from={$from}&to={$to}", "/reports/waste?from={$from}&to={$to}",
-            '/audit', '/settings/users', '/langganan',
+            '/audit', '/settings/users', '/langganan', '/settings/integrations',
             "/riwayat-penjualan?from={$from}&to={$to}", "/keuangan/rekening?from={$from}&to={$to}",
             '/keuangan/rekening/'.$id(\App\Models\PaymentAccount::class, ['method' => 'transfer'])."?from={$from}&to={$to}",
             '/keuangan/rekening/'.$id(\App\Models\PaymentAccount::class, ['method' => 'cash'])."?from={$from}&to={$to}",

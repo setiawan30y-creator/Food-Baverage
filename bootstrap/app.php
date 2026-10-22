@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'superadmin' => \App\Http\Middleware\EnsureSuperAdmin::class,
         ]);
         $middleware->web(append: [\App\Http\Middleware\SecurityHeaders::class]);
+        $middleware->validateCsrfTokens(except: ['webhooks/*']);
         // Konteks tenant harus aktif SEBELUM route model binding agar binding ikut terisolasi per tenant
         $middleware->prependToPriorityList(
             before: \Illuminate\Routing\Middleware\SubstituteBindings::class,

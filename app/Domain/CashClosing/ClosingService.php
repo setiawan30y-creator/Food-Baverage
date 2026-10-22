@@ -98,6 +98,7 @@ class ClosingService
             }
             $shift->update(['status' => 'closed', 'closed_at' => now()]);
             Audit::log('closing.finalized', $closing, null, ['expected' => $s['expected_cash'], 'counted' => $counted, 'difference' => $diff], $reason);
+            app(\App\Domain\WhatsApp\WhatsAppService::class)->closingSummary($closing);
 
             return $closing;
         });

@@ -47,6 +47,7 @@ if (! function_exists('status_badge')) {
             'reopened' => ['Dibuka ulang', 'warn'], 'active' => ['Aktif', 'ok'], 'inactive' => ['Nonaktif', 'muted'],
             'available' => ['Tersedia', 'ok'], 'occupied' => ['Terisi', 'warn'], 'awaiting_payment' => ['Menunggu bayar', 'danger'],
             'success' => ['Sukses', 'ok'], 'failed' => ['Gagal', 'danger'], 'partial' => ['Sebagian', 'warn'],
+            'expired' => ['Kedaluwarsa', 'muted'], 'sent' => ['Terkirim', 'ok'], 'queued' => ['Antre', 'warn'],
         ];
         [$label, $tone] = $map[$status] ?? [ucfirst((string) $status), 'muted'];
 

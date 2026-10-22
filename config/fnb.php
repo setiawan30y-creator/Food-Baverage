@@ -7,7 +7,7 @@
 
 return [
     'product_name' => 'ALMARA Restaurant & Beverage OS',
-    'version' => '1.3.0',
+    'version' => '1.4.0',
     'signature' => '@2026-Alifiandra',
 
     /*
@@ -37,17 +37,17 @@ return [
     'plans' => [
         'basic' => [
             'label' => 'Basic', 'price' => 99000, 'max_branches' => 1, 'max_users' => 5,
-            'modules' => ['pos', 'kitchen', 'inventory', 'reports'],
-            'tagline' => 'Kasir, dapur, stok & resep untuk 1 outlet',
+            'modules' => ['pos', 'kitchen', 'inventory', 'reports', 'payment_gateway'],
+            'tagline' => 'Kasir, dapur, stok, resep & QRIS otomatis untuk 1 outlet',
         ],
         'pro' => [
             'label' => 'Pro', 'price' => 249000, 'max_branches' => 3, 'max_users' => 25,
-            'modules' => ['pos', 'kitchen', 'inventory', 'reports', 'online_order', 'hr', 'payroll'],
-            'tagline' => '+ QR meja, Order Ahead, karyawan, absensi GPS & payroll',
+            'modules' => ['pos', 'kitchen', 'inventory', 'reports', 'payment_gateway', 'online_order', 'hr', 'payroll', 'whatsapp'],
+            'tagline' => '+ QR meja, Order Ahead, notifikasi WhatsApp, karyawan, absensi GPS & payroll',
         ],
         'enterprise' => [
             'label' => 'Enterprise', 'price' => 599000, 'max_branches' => 20, 'max_users' => 200,
-            'modules' => ['pos', 'kitchen', 'inventory', 'reports', 'online_order', 'hr', 'payroll'],
+            'modules' => ['pos', 'kitchen', 'inventory', 'reports', 'payment_gateway', 'online_order', 'hr', 'payroll', 'whatsapp'],
             'tagline' => 'Semua fitur untuk grup usaha multi-cabang',
         ],
     ],
@@ -55,6 +55,7 @@ return [
     'modules' => [
         'pos' => 'Kasir & pesanan', 'kitchen' => 'Layar dapur (KDS)', 'inventory' => 'Stok, resep, produksi & pembelian',
         'reports' => 'Laporan', 'online_order' => 'QR meja & Order Ahead', 'hr' => 'Karyawan, jadwal & absensi GPS', 'payroll' => 'Payroll & slip gaji',
+        'payment_gateway' => 'Payment gateway (QRIS & Virtual Account otomatis)', 'whatsapp' => 'Notifikasi WhatsApp',
     ],
 
     // Kemampuan (ability) → modul paket. Kemampuan yang tidak tercantum selalu tersedia.
@@ -62,6 +63,53 @@ return [
         'kitchen' => 'kitchen', 'inventory' => 'inventory', 'purchasing' => 'inventory', 'recipes' => 'inventory',
         'production' => 'inventory', 'employees' => 'hr', 'schedule' => 'hr', 'attendance' => 'hr', 'payroll' => 'payroll',
         'reports' => 'reports', 'finance' => 'reports',
+    ],
+
+    /*
+    | Payment gateway. Kredensial diisi pemilik usaha di Pengaturan → Integrasi (dana masuk ke akun gateway usaha itu sendiri).
+    */
+    'gateways' => [
+        'midtrans' => ['label' => 'Midtrans', 'channels' => ['qris', 'va_bca', 'va_bni', 'va_bri', 'va_permata'],
+            'fields' => ['server_key' => 'Server Key', 'client_key' => 'Client Key (opsional)'],
+            'help' => 'Dashboard Midtrans → Settings → Access Keys. Gunakan kunci Sandbox untuk uji coba.'],
+        'xendit' => ['label' => 'Xendit', 'channels' => ['qris', 'va_bca', 'va_bni', 'va_bri', 'va_mandiri', 'va_permata'],
+            'fields' => ['secret_key' => 'Secret API Key', 'callback_token' => 'Webhook Verification Token'],
+            'help' => 'Dashboard Xendit → Settings → API Keys (izin Write untuk QR Codes & Virtual Accounts) dan Settings → Webhooks.'],
+    ],
+    'gateway_channels' => [
+        'qris' => 'QRIS', 'va_bca' => 'VA BCA', 'va_bni' => 'VA BNI', 'va_bri' => 'VA BRI', 'va_mandiri' => 'VA Mandiri', 'va_permata' => 'VA Permata',
+    ],
+    'gateway_expiry_minutes' => ['qris' => 15, 'va' => 1440],
+
+    /*
+    | WhatsApp gateway & templat pesan. Placeholder ditulis {nama}.
+    */
+    'whatsapp_providers' => [
+        'fonnte' => ['label' => 'Fonnte', 'fields' => ['token' => 'Token perangkat'], 'help' => 'Dashboard Fonnte → Device → salin Token. Pastikan perangkat berstatus connect.'],
+        'wablas' => ['label' => 'Wablas', 'fields' => ['base_url' => 'Alamat server (mis. https://tegal.wablas.com)', 'token' => 'Token', 'secret_key' => 'Secret key (opsional)'],
+            'help' => 'Dashboard Wablas → Device → Settings. Alamat server sesuai domain akun Anda.'],
+    ],
+    'wa_events' => [
+        'order_paid' => ['label' => 'Pembayaran diterima (ke pelanggan)', 'placeholders' => '{nama} {nomor} {total} {usaha} {cabang} {link_nota} {link_lacak}',
+            'template' => "Terima kasih {nama}! Pembayaran pesanan {nomor} di {usaha} sebesar {total} sudah kami terima.
+Nota digital: {link_nota}
+Lacak pesanan: {link_lacak}"],
+        'order_ready' => ['label' => 'Pesanan siap (ke pelanggan)', 'placeholders' => '{nama} {nomor} {usaha} {cabang} {kode_ambil} {link_lacak}',
+            'template' => "Halo {nama}, pesanan {nomor} di {usaha} sudah SIAP. {kode_ambil}
+Lacak: {link_lacak}"],
+        'closing_summary' => ['label' => 'Ringkasan closing kasir (ke pemilik)', 'placeholders' => '{cabang} {tanggal} {kasir} {jumlah_pesanan} {tunai} {non_tunai} {selisih} {usaha}',
+            'template' => "Closing {cabang} {tanggal} oleh {kasir}:
+{jumlah_pesanan} pesanan
+Tunai: {tunai}
+Non-tunai: {non_tunai}
+Selisih kas: {selisih}"],
+    ],
+    'wa_platform_events' => [
+        'invoice_created' => ['label' => 'Tagihan langganan dibuat (ke pemilik usaha)', 'placeholders' => '{pemilik} {usaha} {nomor_tagihan} {jumlah} {paket} {durasi} {jatuh_tempo} {bank} {rekening} {atas_nama} {link}',
+            'template' => "Halo {pemilik}, tagihan langganan {usaha} {nomor_tagihan}: {jumlah} untuk paket {paket} ({durasi}).
+Bayar sebelum {jatuh_tempo} ke {bank} {rekening} a.n. {atas_nama}, lalu unggah bukti di {link}"],
+        'invoice_paid' => ['label' => 'Pembayaran langganan diterima', 'placeholders' => '{pemilik} {usaha} {nomor_tagihan} {paket} {berlaku_sampai}',
+            'template' => "Terima kasih {pemilik}! Pembayaran {nomor_tagihan} diterima. Langganan {usaha} paket {paket} aktif sampai {berlaku_sampai}."],
     ],
 
     'billing_months' => [1 => '1 bulan', 3 => '3 bulan', 6 => '6 bulan', 12 => '12 bulan (hemat 2 bulan)'],
@@ -75,6 +123,13 @@ return [
         'bank_holder' => 'Nama Pemilik Rekening',
         'support_whatsapp' => '080000000000',
         'registration_open' => '1',
+        'wa_enabled' => '0',
+        'wa_provider' => 'fonnte',
+        'wa_base_url' => '',
+        'wa_event_invoice_created' => '1',
+        'wa_event_invoice_paid' => '1',
+        'wa_template_invoice_created' => '',
+        'wa_template_invoice_paid' => '',
     ],
 
     'payment_methods' => [

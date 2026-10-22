@@ -32,6 +32,11 @@ Route::post('/o/{slug}/{branch}', [Public\OrderAheadController::class, 'store'])
 Route::get('/track/{token}', [Public\TrackController::class, 'show'])->name('track.show');
 Route::get('/track/{token}/status', [Public\TrackController::class, 'status'])->name('track.status');
 Route::get('/nota/{token}', [Public\TrackController::class, 'receipt'])->name('track.receipt');
+Route::post('/track/{token}/pay', [Public\TrackController::class, 'pay'])->middleware('throttle:public-order')->name('track.pay');
+Route::get('/track/{token}/pay/{reference}', [Public\TrackController::class, 'payStatus'])->middleware('throttle:120,1')->name('track.pay.status');
+
+// Webhook payment gateway (tanpa login & CSRF; diverifikasi tanda tangan/token gateway)
+Route::post('/webhooks/payment/{token}', [Controllers\PaymentGatewayController::class, 'webhook'])->middleware('throttle:300,1')->name('webhooks.payment');
 
 // ---------- Autentikasi ----------
 Route::middleware('guest')->group(function () {
@@ -61,6 +66,8 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
     Route::get('/invoices/{invoice}/proof', [AdminController::class, 'invoiceProof'])->whereNumber('invoice')->name('invoices.proof');
     Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
     Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
+    Route::post('/settings/whatsapp', [AdminController::class, 'updateWhatsapp'])->name('settings.whatsapp');
+    Route::post('/settings/whatsapp/test', [AdminController::class, 'testWhatsapp'])->name('settings.whatsapp.test');
 });
 
 // ---------- Aplikasi (login + konteks tenant) ----------
@@ -75,6 +82,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/pos/stock', [Controllers\PosController::class, 'stock'])->name('pos.stock');
         Route::post('/pos/orders', [Controllers\PosController::class, 'store'])->name('pos.store');
         Route::post('/orders/{order}/pay', [Controllers\PosController::class, 'pay'])->name('orders.pay');
+        Route::post('/orders/{order}/gateway', [Controllers\PaymentGatewayController::class, 'charge'])->name('orders.gateway');
+        Route::get('/gateway-charges/{charge}', [Controllers\PaymentGatewayController::class, 'status'])->name('gateway.status');
     });
     Route::middleware('ability:orders')->group(function () {
         Route::get('/orders', [Controllers\OrderController::class, 'index'])->name('orders.index');
@@ -278,5 +287,10 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/users', [Settings\UserController::class, 'index'])->name('users');
         Route::post('/users', [Settings\UserController::class, 'store'])->name('users.store');
         Route::put('/users/{user}', [Settings\UserController::class, 'update'])->name('users.update');
+        Route::get('/integrations', [Settings\IntegrationController::class, 'index'])->name('integrations');
+        Route::post('/integrations/payment', [Settings\IntegrationController::class, 'updatePayment'])->name('integrations.payment');
+        Route::post('/integrations/whatsapp', [Settings\IntegrationController::class, 'updateWhatsapp'])->name('integrations.whatsapp');
+        Route::post('/integrations/{type}/test', [Settings\IntegrationController::class, 'test'])->name('integrations.test');
+        Route::post('/integrations/whatsapp/send-test', [Settings\IntegrationController::class, 'sendTest'])->name('integrations.wa-test');
     });
 });

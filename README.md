@@ -28,11 +28,13 @@ Aplikasi SaaS multi-tenant untuk warung makan & usaha makanan/minuman, dibangun 
 | Payroll | Bulanan, harian, per shift, per jam, komisi, borongan; tunjangan, lembur disetujui, bonus/THR, potongan (BPJS/PPh21 diisi sesuai aturan berlaku — tidak di-hardcode), cicilan kasbon, kunci setelah disetujui, slip privat |
 | Laporan | Penjualan harian, kanal, kasir, cabang (konsolidasi), rekonsiliasi pembayaran, menu & margin, pemakaian & kebocoran stok, waste — ekspor CSV |
 | Keuangan | Saldo Kas & Rekening (bank, QRIS, e-wallet, kas): saldo awal, penjualan masuk per rekening, mutasi & pindah dana; Riwayat Penjualan per metode/rekening |
+| Payment gateway | Midtrans / Xendit per usaha: QRIS dinamis & Virtual Account di kasir dan halaman lacak pelanggan, lunas otomatis via webhook terverifikasi, biaya MDR tercatat |
+| WhatsApp | Fonnte / Wablas: nota digital, pesanan siap, ringkasan closing; WhatsApp platform untuk tagihan langganan |
 | Audit | Log tindakan sensitif (diskon, void, refund, closing, stok, harga, payroll, dll.) |
 | PWA | Manifest + service worker (hanya aset statis; transaksi selalu lewat server), indikator offline |
 
 ### Tahap berikutnya (belum dikerjakan)
-Integrasi payment gateway (callback server-side), WhatsApp Gateway, jurnal akuntansi double-entry & laporan neraca/laba rugi,
+Jurnal akuntansi double-entry & laporan neraca/laba rugi,
 split bill & gabung meja, transfer stok antar cabang, akun & loyalitas pelanggan (login), reservasi/delivery, Livewire untuk
 komponen real-time, Redis/queue produksi, panel super-admin SaaS.
 
@@ -78,6 +80,15 @@ php artisan saas:superadmin admin@domainanda.com
 
 Pemeriksaan harian (status & tagihan perpanjangan otomatis) berjalan lewat scheduler. Di server Linux: cron `* * * * * php artisan schedule:run`.
 Di Laragon untuk uji coba: `php artisan schedule:work` (biarkan jendela terbuka) atau jalankan manual `php artisan saas:check-subscriptions`.
+
+## Payment gateway & WhatsApp
+Pengaturan → **Integrasi** (pemilik usaha):
+1. Pilih Midtrans atau Xendit, isi kunci API (Sandbox/Test dulu), centang metode (QRIS, VA), aktifkan, klik **Uji koneksi**.
+2. Salin **URL notifikasi (webhook)** ke dashboard gateway. Webhook hanya bisa diterima bila aplikasi online (HTTPS publik).
+   Di komputer lokal, status tetap bisa dicek lewat tombol *Cek status* (Midtrans & QRIS Xendit).
+3. WhatsApp: pilih Fonnte/Wablas, isi token, aktifkan event, **Kirim pesan tes**.
+
+Super Admin → Pengaturan → **WhatsApp platform** untuk mengirim tagihan langganan ke nomor pemilik usaha.
 
 ## PWA (pasang sebagai aplikasi)
 - **Aplikasi staf**: nama, warna & ikon mengikuti profil usaha (ikon dibuat otomatis dari logo), pintasan Kasir/Dapur/Absen/Pesanan sesuai hak akses.

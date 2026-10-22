@@ -195,18 +195,21 @@ class OrderService
             $order->update($data);
             $order->histories()->create(['from_status' => $from, 'to_status' => $to, 'user_id' => auth()->id(), 'note' => $note]);
         });
+        if ($to === 'ready') {
+            app(\App\Domain\WhatsApp\WhatsAppService::class)->orderReady($order);
+        }
 
         return $order->fresh();
     }
 
     /** Pembayaran dikonfirmasi oleh kasir (tunai atau non-tunai yang sudah diverifikasi). */
-    public function pay(Order $order, string $method, float $received, ?string $reference, ?CashierShift $shift, ?string $idempotencyKey = null, ?int $accountId = null): Payment
+    public function pay(Order $order, string $method, float $received, ?string $reference, ?CashierShift $shift, ?string $idempotencyKey = null, ?int $accountId = null, bool $strictAccount = true): Payment
     {
         if ($idempotencyKey && ($existing = Payment::where('idempotency_key', $idempotencyKey)->first())) {
             return $existing;
         }
 
-        return DB::transaction(function () use ($order, $method, $received, $reference, $shift, $idempotencyKey, $accountId) {
+        return DB::transaction(function () use ($order, $method, $received, $reference, $shift, $idempotencyKey, $accountId, $strictAccount) {
             $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
             if ($order->payment_status === 'paid') {
                 throw new \DomainException('Pesanan sudah lunas.');
@@ -222,7 +225,7 @@ class OrderService
                 $received = $total;
             }
             // Rekening tujuan (bank/QRIS/e-wallet/kas) agar saldo per akun tercatat
-            $accountId = app(\App\Domain\Finance\AccountService::class)->resolveForPayment((int) $order->branch_id, $method, $accountId);
+            $accountId = app(\App\Domain\Finance\AccountService::class)->resolveForPayment((int) $order->branch_id, $method, $accountId, $strictAccount);
 
             $payment = Payment::create([
                 'tenant_id' => $order->tenant_id,
@@ -254,6 +257,8 @@ class OrderService
             if ($order->customer_id) {
                 Customer::whereKey($order->customer_id)->increment('points', (int) floor($total / 10000));
             }
+
+            app(\App\Domain\WhatsApp\WhatsAppService::class)->orderPaid($order);
 
             return $payment;
         });

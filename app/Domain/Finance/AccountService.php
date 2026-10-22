@@ -20,9 +20,12 @@ use Illuminate\Support\Str;
 class AccountService
 {
     /** Tentukan rekening tujuan pembayaran. Satu rekening aktif → otomatis; lebih dari satu → wajib dipilih. */
-    public function resolveForPayment(int $branchId, string $method, ?int $accountId): ?int
+    public function resolveForPayment(int $branchId, string $method, ?int $accountId, bool $strict = true): ?int
     {
         $accounts = PaymentAccount::usableAt($branchId)->where('method', $method)->pluck('id');
+        if ($accountId && ! $strict && ! $accounts->contains($accountId)) {
+            $accountId = null; // pembayaran otomatis (gateway): jangan gagal karena pengaturan rekening
+        }
         if ($accountId) {
             if (! $accounts->contains($accountId)) {
                 throw new \DomainException('Rekening tujuan tidak cocok dengan metode pembayaran atau cabang ini.');
@@ -31,6 +34,9 @@ class AccountService
             return $accountId;
         }
         if ($accounts->count() > 1) {
+            if (! $strict) {
+                return null;
+            }
             throw new \DomainException('Pilih rekening tujuan pembayaran ('.config('fnb.payment_methods.'.$method, $method).').');
         }
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.0 — 2026-10-22
+- **Payment gateway** (Pengaturan → Integrasi): Midtrans atau Xendit milik masing-masing usaha. QRIS dinamis & Virtual Account (BCA, BNI, BRI, Mandiri*, Permata) dari layar kasir; pelanggan Order Ahead/QR meja bisa bayar sendiri di halaman lacak pesanan.
+  Pesanan lunas otomatis hanya setelah webhook terverifikasi (signature Midtrans / callback token Xendit) atau cek status server-ke-server; idempoten, nominal kurang ditolak, pembayaran ganda tercatat di audit.
+  Biaya (MDR) tercatat sebagai provider fee & mutasi keluar di Saldo Kas & Rekening. *Mandiri hanya Xendit.
+- **WhatsApp gateway** (Fonnte / Wablas): nota digital setelah bayar, pesanan siap, ringkasan closing ke pemilik — templat bisa diubah, log pesan, kirim tes.
+- Super Admin: WhatsApp platform untuk tagihan & konfirmasi pembayaran langganan.
+- Kredensial disimpan terenkripsi; modul `payment_gateway` (semua paket) & `whatsapp` (Pro/Enterprise).
+- Migrasi baru: php artisan migrate. @2026-Alifiandra
+
 ## 1.3.0 — 2026-10-22
 - Keuangan → **Saldo Kas & Rekening** (`/keuangan/rekening`): rekening bank, QRIS, e-wallet & kas dengan saldo awal, penjualan masuk per rekening, mutasi manual (biaya admin, penarikan, setoran, koreksi), pindah dana antar rekening, mutasi dengan saldo berjalan, ekspor CSV.
 - Pembayaran pesanan otomatis masuk ke rekening metode tersebut; bila satu metode punya beberapa rekening, kasir memilih rekening tujuan.

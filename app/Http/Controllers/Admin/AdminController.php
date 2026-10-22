@@ -208,7 +208,11 @@ class AdminController extends Controller
     {
         $keys = array_keys(config('fnb.platform_defaults'));
 
-        return view('admin.settings', ['values' => collect($keys)->mapWithKeys(fn ($k) => [$k => PlatformSetting::get($k)]), 'plans' => config('fnb.plans')]);
+        return view('admin.settings', [
+            'values' => collect($keys)->mapWithKeys(fn ($k) => [$k => PlatformSetting::get($k)]), 'plans' => config('fnb.plans'),
+            'waTokenSet' => (bool) PlatformSetting::get('wa_token'),
+            'waMessages' => \App\Models\WaMessage::whereNull('tenant_id')->latest()->limit(15)->get(),
+        ]);
     }
 
     public function updateSettings(Request $request)
@@ -225,6 +229,57 @@ class AdminController extends Controller
         PlatformSetting::put($data);
 
         return back()->with('success', 'Pengaturan platform disimpan.');
+    }
+
+    /** WhatsApp platform: pengingat & konfirmasi tagihan langganan ke pemilik usaha. */
+    public function updateWhatsapp(Request $request)
+    {
+        $data = $request->validate([
+            'wa_provider' => ['required', Rule::in(array_keys(config('fnb.whatsapp_providers')))],
+            'wa_base_url' => ['nullable', 'url', 'max:120'],
+            'wa_token' => ['nullable', 'string', 'max:255'],
+            'wa_secret_key' => ['nullable', 'string', 'max:255'],
+            'wa_template_invoice_created' => ['nullable', 'string', 'max:1000'],
+            'wa_template_invoice_paid' => ['nullable', 'string', 'max:1000'],
+        ]);
+        $values = [
+            'wa_enabled' => $request->boolean('wa_enabled') ? '1' : '0',
+            'wa_provider' => $data['wa_provider'],
+            'wa_base_url' => $data['wa_base_url'] ?? '',
+            'wa_event_invoice_created' => $request->boolean('wa_event_invoice_created') ? '1' : '0',
+            'wa_event_invoice_paid' => $request->boolean('wa_event_invoice_paid') ? '1' : '0',
+        ];
+        foreach (['invoice_created', 'invoice_paid'] as $e) {
+            $tpl = trim((string) ($data["wa_template_{$e}"] ?? ''));
+            $values["wa_template_{$e}"] = $tpl === config("fnb.wa_platform_events.{$e}.template") ? '' : $tpl;
+        }
+        foreach (['wa_token', 'wa_secret_key'] as $k) {
+            if (trim((string) ($data[$k] ?? '')) !== '') {
+                $values[$k] = \Illuminate\Support\Facades\Crypt::encryptString(trim($data[$k]));
+            }
+        }
+        PlatformSetting::put($values);
+
+        return back()->with('success', 'Pengaturan WhatsApp platform disimpan.');
+    }
+
+    public function testWhatsapp(Request $request, \App\Domain\WhatsApp\WhatsAppService $wa)
+    {
+        $data = $request->validate(['phone' => ['nullable', 'string', 'max:30']]);
+        $sender = new \App\Domain\WhatsApp\WhatsAppSender([
+            'provider' => PlatformSetting::get('wa_provider'), 'token' => $wa::decrypt(PlatformSetting::get('wa_token')),
+            'secret_key' => $wa::decrypt(PlatformSetting::get('wa_secret_key')), 'base_url' => PlatformSetting::get('wa_base_url'),
+        ]);
+        try {
+            if (empty($data['phone'])) {
+                return back()->with('success', $sender->test());
+            }
+            $log = $wa->sendNow($sender, null, 'test', $data['phone'], 'Tes WhatsApp platform '.config('fnb.product_name').'.');
+
+            return $log?->status === 'sent' ? back()->with('success', 'Pesan tes terkirim ke '.$log->to.'.') : back()->with('error', 'Gagal: '.($log?->error ?? 'nomor tidak valid'));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Uji koneksi gagal: '.$e->getMessage());
+        }
     }
 
     protected function plain(array $a): array

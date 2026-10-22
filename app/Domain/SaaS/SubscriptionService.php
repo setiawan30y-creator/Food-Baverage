@@ -23,7 +23,7 @@ class SubscriptionService
         SubscriptionInvoice::withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('status', 'unpaid')
             ->update(['status' => 'void', 'note' => 'Diganti tagihan baru']);
 
-        return SubscriptionInvoice::withoutGlobalScopes()->create([
+        $invoice = SubscriptionInvoice::withoutGlobalScopes()->create([
             'tenant_id' => $tenant->id,
             'plan' => $plan,
             'months' => $months,
@@ -33,6 +33,9 @@ class SubscriptionService
             'note' => $note,
             'created_by' => $userId,
         ]);
+        app(\App\Domain\WhatsApp\WhatsAppService::class)->invoiceCreated($invoice);
+
+        return $invoice;
     }
 
     /** Tandai lunas → paket diterapkan & masa aktif diperpanjang dari tanggal akhir sekarang (bila masih berlaku). */
@@ -61,6 +64,7 @@ class SubscriptionService
                 'period_start' => $start, 'period_end' => $end,
             ]);
             $this->audit($tenant->id, $adminId, 'saas.invoice_paid', $invoice, $before, $tenant->only(array_keys($before)));
+            app(\App\Domain\WhatsApp\WhatsAppService::class)->invoicePaid($invoice);
         });
     }
 

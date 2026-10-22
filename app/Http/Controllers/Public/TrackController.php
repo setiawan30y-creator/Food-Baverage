@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Domain\Payments\GatewayService;
 use App\Http\Controllers\Controller;
+use App\Models\GatewayCharge;
+use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\Tenant;
 
@@ -17,9 +20,41 @@ class TrackController extends Controller
         return $order->load(['items', 'branch', 'table', 'payments']);
     }
 
-    public function show(string $token)
+    public function show(string $token, GatewayService $gateway)
     {
-        return view('public.track', ['order' => $this->find($token)]);
+        $order = $this->find($token);
+
+        return view('public.track', ['order' => $order, 'payChannels' => $this->payChannels($order, $gateway)]);
+    }
+
+    /** Kanal bayar online untuk pelanggan (hanya bila pemilik mengizinkan & pesanan belum lunas). */
+    protected function payChannels(Order $order, GatewayService $gateway): array
+    {
+        $i = $gateway->active();
+        if (! $i || ! $i->setting('public_pay', true) || $order->payment_status === 'paid' || $order->status === 'cancelled') {
+            return [];
+        }
+
+        return $gateway->channelOptions($i);
+    }
+
+    public function pay(Request $request, string $token, GatewayService $gateway)
+    {
+        $order = $this->find($token);
+        abort_if(empty($this->payChannels($order, $gateway)), 422, 'Pembayaran online tidak tersedia untuk pesanan ini.');
+        $data = $request->validate(['channel' => ['required', 'string', 'max:30']]);
+        $charge = $gateway->createCharge($order, $data['channel']);
+
+        return response()->json(['charge' => $charge->toPublic() + ['qr_image' => $charge->payload['_qr_url'] ?? null]]);
+    }
+
+    public function payStatus(string $token, string $reference, GatewayService $gateway)
+    {
+        $order = $this->find($token);
+        $charge = GatewayCharge::where('order_id', $order->id)->where('reference', $reference)->firstOrFail();
+        $charge = $gateway->refresh($charge);
+
+        return response()->json(['status' => $charge->status, 'order_paid' => $order->fresh()->payment_status === 'paid']);
     }
 
     public function status(string $token)

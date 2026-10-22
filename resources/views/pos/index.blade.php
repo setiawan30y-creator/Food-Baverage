@@ -1,5 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Kasir')
+@if(count($gatewayChannels))
+@push('head')<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>@endpush
+@endif
 @section('content')
 @if(!$shift)
   <div class="alert alert-warn">Shift kasir Anda belum dibuka. Pesanan bisa dibuat, tetapi pembayaran memerlukan shift aktif. <a href="{{ route('cashier.index') }}">Buka shift →</a></div>
@@ -123,7 +126,37 @@
               @foreach(config('fnb.payment_methods') as $k => $label)
                 <button type="button" style="flex:1" :class="{on: method==='{{ $k }}'}" @click="setMethod('{{ $k }}')">{{ $label }}</button>
               @endforeach
+              @if(count($gatewayChannels))
+                <button type="button" style="flex:1" :class="{on: method==='online'}" @click="setMethod('online')">QRIS/VA otomatis</button>
+              @endif
             </div>
+            @if(count($gatewayChannels))
+            <div x-show="method==='online'">
+              <div class="row" style="flex-wrap:wrap" x-show="!charge">
+                <template x-for="c in gwChannels" :key="c.id"><button type="button" class="btn" @click="startCharge(c.id)" :disabled="charging" x-text="c.label"></button></template>
+              </div>
+              <p class="muted" x-show="charging">Membuat tagihan di payment gateway…</p>
+              <template x-if="charge">
+                <div style="text-align:center">
+                  <div x-show="charge.qr_string || charge.qr_image">
+                    <div x-ref="qr" style="display:flex;justify-content:center;margin:6px 0"></div>
+                    <img x-show="!charge.qr_string && charge.qr_image" :src="charge.qr_image" alt="QRIS" style="width:220px;height:220px;margin:auto">
+                    <small class="muted">Minta pelanggan memindai QRIS dengan aplikasi bank / e-wallet apa pun.</small>
+                  </div>
+                  <div x-show="charge.va_number">
+                    <small class="muted" x-text="'Nomor ' + charge.channel_label"></small>
+                    <div class="mono" style="font-size:24px;font-weight:800;letter-spacing:.05em" x-text="charge.va_number"></div>
+                  </div>
+                  <div class="row between" style="margin-top:10px"><span class="muted" x-text="'Berlaku sampai ' + (charge.expires_label || '-')"></span><b class="mono" x-text="rupiah(charge.amount)"></b></div>
+                  <div class="alert alert-info" style="margin-top:10px" x-text="gwStatusText"></div>
+                  <div class="row" style="justify-content:center">
+                    <button type="button" class="btn btn-sm" @click="checkCharge()">Cek status sekarang</button>
+                    <button type="button" class="btn btn-sm btn-ghost" @click="resetCharge()">Ganti metode</button>
+                  </div>
+                </div>
+              </template>
+            </div>
+            @endif
             <div x-show="method==='cash'">
               <label>Uang diterima</label>
               <input type="number" x-model.number="received" min="0" class="btn-lg" style="font-size:20px;font-weight:700">
@@ -143,7 +176,7 @@
               <select x-show="accList.length > 1" x-model="account"><option value="">— pilih rekening tujuan —</option><template x-for="a in accList" :key="a.id"><option :value="a.id" x-text="a.label"></option></template></select>
             </div>
             <p class="error-text" x-show="payError" x-text="payError"></p>
-            <button type="button" class="btn btn-accent btn-lg btn-block" style="margin-top:14px" @click="pay()" :disabled="paying" x-text="paying ? 'Memverifikasi ke server…' : 'Konfirmasi pembayaran'"></button>
+            <button x-show="method!=='online'" type="button" class="btn btn-accent btn-lg btn-block" style="margin-top:14px" @click="pay()" :disabled="paying" x-text="paying ? 'Memverifikasi ke server…' : 'Konfirmasi pembayaran'"></button>
           </div>
           <div class="card-pad" x-show="paid" style="text-align:center">
             <div class="badge badge-ok" style="font-size:14px;padding:6px 14px">Pembayaran tercatat di server</div>
@@ -172,7 +205,29 @@ function pos() {
     payOrder: null, method: 'cash', received: 0, reference: '', paying: false, paid: false, change: 0, payError: '', payKey: null,
     accounts: @js($accounts), account: '',
     get accList() { return this.accounts[this.method] || []; },
-    setMethod(k) { this.method = k; this.account = this.accList.length === 1 ? this.accList[0].id : ''; },
+    setMethod(k) { this.method = k; this.account = this.accList.length === 1 ? this.accList[0].id : ''; if (k !== 'online') this.resetCharge(); },
+    gwChannels: @js($gatewayChannels), charge: null, charging: false, gwTimer: null, gwStatusText: '',
+    gwStatusUrl: @js(route('gateway.status', '__ID__')),
+    async startCharge(channel) {
+      this.charging = true; this.payError = '';
+      try {
+        const r = await api(this.payOrder.pay_url.replace(/\/pay$/, '/gateway'), { channel });
+        this.charge = r.charge; this.gwStatusText = 'Menunggu pembayaran… status diperbarui otomatis.';
+        this.$nextTick(() => { const el = this.$refs.qr; if (el && this.charge.qr_string && window.QRCode) { el.innerHTML = ''; new QRCode(el, { text: this.charge.qr_string, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M }); } });
+        clearInterval(this.gwTimer); this.gwTimer = setInterval(() => this.checkCharge(), 4000);
+      } catch (e) { this.payError = e.message; }
+      this.charging = false;
+    },
+    async checkCharge() {
+      if (!this.charge) return;
+      try {
+        const res = await fetch(this.gwStatusUrl.replace('__ID__', this.charge.id), { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+        const j = await res.json();
+        if (j.order_paid) { clearInterval(this.gwTimer); this.change = 0; this.paid = true; return; }
+        if (j.status === 'expired' || j.status === 'failed') { clearInterval(this.gwTimer); this.gwStatusText = j.status === 'expired' ? 'Tagihan kedaluwarsa. Buat tagihan baru.' : 'Pembayaran gagal. Buat tagihan baru atau pakai metode lain.'; }
+      } catch (e) { this.gwStatusText = 'Koneksi terputus, mencoba lagi…'; }
+    },
+    resetCharge() { clearInterval(this.gwTimer); this.charge = null; this.gwStatusText = ''; },
     get filtered() { const q = this.q.toLowerCase(); return this.menus.filter(m => (this.cat === null || m.category === this.cat) && (!q || m.name.toLowerCase().includes(q))); },
     get subtotal() { return this.cart.reduce((s, l) => s + this.lineTotal(l), 0); },
     get base() { return Math.max(0, this.subtotal - (Number(this.discount) || 0)); },
@@ -221,7 +276,7 @@ function pos() {
       this.busy = false;
     },
     openPay(o) { this.payOrder = o; this.setMethod('cash'); this.received = o.total; this.reference = ''; this.paid = false; this.payError = ''; this.payKey = uuid(); },
-    closePay(reload) { this.payOrder = null; if (reload || this.paid) location.reload(); },
+    closePay(reload) { this.resetCharge(); this.payOrder = null; if (reload || this.paid) location.reload(); },
     async pay() {
       this.paying = true; this.payError = '';
       try {
