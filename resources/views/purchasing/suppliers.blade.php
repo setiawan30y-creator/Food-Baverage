@@ -4,7 +4,7 @@
 <div class="page-head"><div><h1>Supplier</h1></div></div>
 @include('purchasing._tabs')
 <div class="grid g-side">
-  <div class="card table-wrap"><table class="table"><thead><tr><th>Nama</th><th>Kontak</th><th>Lead time</th><th></th></tr></thead><tbody>
+  <div class="card table-wrap"><table class="table"><thead><tr><th>Nama</th><th>Kontak</th><th>Lead time</th><th>Aksi</th></tr></thead><tbody>
     @forelse($suppliers as $s)
       <tr x-data="{ e: false }">
         <td><b>{{ $s->name }}</b><br><small>{{ $s->address }}</small></td><td>{{ $s->phone }}</td><td>{{ $s->lead_time_days }} hari</td>

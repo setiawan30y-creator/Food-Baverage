@@ -26,6 +26,6 @@
 </div>
 <div class="card card-pad" style="margin-top:16px">
   <h3 style="margin-bottom:8px">Ringkasan peran</h3>
-  <table class="table"><tbody>@foreach($roles as $k => $r)<tr><td style="width:160px"><b>{{ $r['label'] }}</b></td><td><small>{{ in_array('*', $r['abilities']) ? 'Semua akses termasuk pengaturan' : implode(', ', $r['abilities']) }}</small></td></tr>@endforeach</tbody></table>
+  <table class="table"><tbody>@foreach($roles as $k => $r)<tr><td style="width:160px"><b>{{ $r['label'] }}</b></td><td class="l"><small>{{ in_array('*', $r['abilities']) ? 'Semua akses termasuk pengaturan' : implode(', ', $r['abilities']) }}</small></td></tr>@endforeach</tbody></table>
 </div>
 @endsection

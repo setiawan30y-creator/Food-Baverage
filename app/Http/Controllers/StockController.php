@@ -54,9 +54,10 @@ class StockController extends Controller
     public function openingForm(InventoryService $inventory)
     {
         $items = InventoryItem::where('is_active', true)->orderBy('name')->get();
-        $hasOpening = StockMovement::forBranch()->where('type', 'opening')->pluck('inventory_item_id')->unique();
+        $opening = StockMovement::forBranch()->where('type', 'opening')->get()->keyBy('inventory_item_id');
+        $hasOpening = $opening->keys();
 
-        return view('inventory.opening', compact('items', 'hasOpening'));
+        return view('inventory.opening', compact('items', 'hasOpening', 'opening'));
     }
 
     /** Saldo awal persediaan (wizard migrasi). Item yang sudah punya saldo awal tidak bisa ditimpa. */

@@ -20,9 +20,9 @@
   <div class="grid g-side">
     <div class="card">
       <div class="card-head"><h3>Kas masuk / keluar shift ini</h3></div>
-      <table class="table"><thead><tr><th>Waktu</th><th>Jenis</th><th>Keterangan</th><th class="num">Jumlah</th></tr></thead><tbody>
+      <table class="table"><thead><tr><th>Waktu</th><th>Jenis</th><th class="l">Keterangan</th><th class="num">Jumlah</th></tr></thead><tbody>
         @forelse($movements as $m)
-          <tr><td>{{ $m->created_at->format('H:i') }}</td><td>{{ ['income'=>'Penerimaan lain','expense'=>'Pengeluaran','deposit'=>'Setoran'][$m->type] }}</td><td>{{ $m->category ? $m->category.' · ' : '' }}{{ $m->note }}</td>
+          <tr><td>{{ $m->created_at->format('H:i') }}</td><td>{{ ['income'=>'Penerimaan lain','expense'=>'Pengeluaran','deposit'=>'Setoran'][$m->type] }}</td><td class="l">{{ $m->category ? $m->category.' · ' : '' }}{{ $m->note }}</td>
             <td class="num {{ $m->type==='income' ? 'diff-pos' : 'diff-neg' }}">{{ $m->type==='income' ? '+' : '−' }}{{ rupiah($m->amount) }}</td></tr>
         @empty <tr><td colspan="4" class="empty">Belum ada.</td></tr>
         @endforelse

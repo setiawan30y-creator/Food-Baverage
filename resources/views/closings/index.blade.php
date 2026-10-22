@@ -12,7 +12,7 @@
   <div class="field"><label>Persetujuan</label><select name="approval"><option value="">Semua</option><option value="pending" @selected(request('approval')==='pending')>Menunggu</option><option value="approved" @selected(request('approval')==='approved')>Disetujui</option><option value="rejected" @selected(request('approval')==='rejected')>Ditolak</option></select></div>
   <button class="btn">Terapkan</button>
 </form>
-<div class="card table-wrap"><table class="table">
+<div class="card table-wrap"><table class="table table-compact">
   <thead><tr><th>Nomor</th><th>Final</th><th>Kasir · Shift</th><th class="num">Kas seharusnya</th><th class="num">Kas fisik</th><th class="num">Selisih</th><th class="num">Non-tunai</th><th>Status</th></tr></thead><tbody>
   @forelse($closings as $c)
     <tr><td><a href="{{ route('closings.show', $c) }}"><b>{{ $c->number }}</b></a></td><td>{{ $c->finalized_at->format('d/m/y H:i') }}</td><td>{{ $c->user?->name }}<br><small>{{ $c->shift?->number }}</small></td>

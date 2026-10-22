@@ -4,10 +4,10 @@
 <div class="page-head"><div><h1>Izin, sakit, cuti & lembur</h1><p>Lembur hanya dibayar setelah disetujui.</p></div></div>
 <div class="grid g-side">
   <div class="card table-wrap"><table class="table">
-    <thead><tr><th>Karyawan</th><th>Jenis</th><th>Tanggal</th><th>Alasan</th><th>Status</th><th></th></tr></thead><tbody>
+    <thead><tr><th>Karyawan</th><th>Jenis</th><th>Tanggal</th><th class="l">Alasan</th><th>Status</th><th>Aksi</th></tr></thead><tbody>
     @forelse($leaves as $l)
       <tr><td>{{ $l->employee?->name }}</td><td>{{ \App\Models\LeaveRequest::TYPES[$l->type] }}{{ $l->hours ? ' · '.qty($l->hours).' jam' : '' }}</td>
-        <td>{{ $l->start_date->format('d/m') }}{{ $l->end_date->ne($l->start_date) ? ' – '.$l->end_date->format('d/m') : '' }}</td><td>{{ $l->reason }}</td><td>{!! status_badge($l->status) !!}</td>
+        <td>{{ $l->start_date->format('d/m') }}{{ $l->end_date->ne($l->start_date) ? ' – '.$l->end_date->format('d/m') : '' }}</td><td class="l">{{ $l->reason }}</td><td>{!! status_badge($l->status) !!}</td>
         <td>@if($l->status==='submitted')<div class="row">
           @if($manage)<form method="POST" action="{{ route('leaves.decide', $l) }}" class="row">@csrf<button name="decision" value="approved" class="btn btn-sm btn-accent">Setujui</button><button name="decision" value="rejected" class="btn btn-sm btn-danger">Tolak</button></form>@endif
           <form method="POST" action="{{ route('leaves.cancel', $l) }}">@csrf<button class="btn btn-sm btn-ghost">Batalkan</button></form></div>@endif</td></tr>

@@ -6,8 +6,8 @@
 @include('inventory._tabs')
 <div class="grid g-side">
   <div class="card table-wrap">
-    <table class="table">
-      <thead><tr><th>Bahan</th><th>Jenis</th><th class="num">Saldo</th><th class="num">HPP / satuan</th><th class="num">Nilai</th><th></th></tr></thead>
+    <table class="table table-compact">
+      <thead><tr><th>Bahan</th><th>Jenis</th><th class="num">Saldo</th><th class="num">HPP / satuan</th><th class="num">Nilai</th><th>Riwayat</th></tr></thead>
       <tbody>
       @foreach($rows as $r)
         <tr>

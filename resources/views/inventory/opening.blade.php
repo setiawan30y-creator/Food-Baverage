@@ -10,7 +10,7 @@
     <tbody>
     @foreach($items as $i)
       <tr><td>{{ $i->name }} @if($i->type==='sub_recipe')<span class="badge badge-primary">Racikan</span>@endif</td><td>{{ $i->base_unit }}</td>
-        @if($hasOpening->contains($i->id))<td colspan="2" class="num"><span class="badge badge-ok">Sudah ada saldo awal</span></td>
+        @if($hasOpening->contains($i->id))<td class="num">{{ qty($opening[$i->id]->qty) }} <span class="badge badge-ok">Final</span></td><td class="num">{{ number_format($opening[$i->id]->unit_cost, 2, ',', '.') }}</td>
         @else<td class="num"><input type="number" step="any" min="0" name="lines[{{ $i->id }}][qty]" class="input-sm" style="width:130px"></td><td class="num"><input type="number" step="any" min="0" name="lines[{{ $i->id }}][unit_cost]" class="input-sm" style="width:130px"></td>@endif
       </tr>
     @endforeach

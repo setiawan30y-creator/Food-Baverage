@@ -11,7 +11,7 @@
   <div class="card stat"><div class="label">Laba kotor</div><div class="value">{{ rupiah($sum('subtotal') - $sum('discount') - $sum('cost')) }}</div><div class="hint">sebelum pajak & service</div></div>
 </div>
 <div class="grid g-side">
-  <div class="card table-wrap"><table class="table">
+  <div class="card table-wrap"><table class="table table-compact">
     <thead><tr><th>Tanggal</th><th class="num">Transaksi</th><th class="num">Subtotal</th><th class="num">Diskon</th><th class="num">Pajak+Service</th><th class="num">Total</th><th class="num">HPP</th></tr></thead><tbody>
     @forelse($daily as $d)<tr><td>{{ \Illuminate\Support\Carbon::parse($d->d)->translatedFormat('D d/m') }}</td><td class="num">{{ $d->orders }}</td><td class="num">{{ rupiah($d->subtotal) }}</td><td class="num">{{ rupiah($d->discount) }}</td><td class="num">{{ rupiah($d->tax + $d->service) }}</td><td class="num">{{ rupiah($d->total) }}</td><td class="num">{{ rupiah($d->cost) }}</td></tr>
     @empty <tr><td colspan="7" class="empty">Tidak ada penjualan pada periode ini.</td></tr>@endforelse

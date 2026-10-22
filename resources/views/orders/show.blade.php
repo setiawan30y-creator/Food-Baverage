@@ -38,7 +38,7 @@
       <div class="card-head"><h3>Riwayat status</h3></div>
       <table class="table"><tbody>
         @foreach($order->histories->sortBy('id') as $h)
-          <tr><td style="width:120px">{{ $h->created_at?->format('d/m H:i') }}</td><td>{!! $h->from_status ? status_badge($h->from_status).' → ' : '' !!}{!! status_badge($h->to_status) !!}</td><td>{{ $h->note }}</td><td><small>{{ $h->user?->name ?? 'Pelanggan' }}</small></td></tr>
+          <tr><td style="width:120px">{{ $h->created_at?->format('d/m H:i') }}</td><td>{!! $h->from_status ? status_badge($h->from_status).' → ' : '' !!}{!! status_badge($h->to_status) !!}</td><td class="l">{{ $h->note }}</td><td><small>{{ $h->user?->name ?? 'Pelanggan' }}</small></td></tr>
         @endforeach
       </tbody></table>
     </div>

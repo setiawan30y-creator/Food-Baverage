@@ -9,7 +9,7 @@
     @endif
   </div></div>
 <div class="grid g-side">
-  <div class="card table-wrap"><table class="table">
+  <div class="card table-wrap"><table class="table table-compact">
     <thead><tr><th>Bahan</th><th class="num">Jumlah</th><th class="num">= satuan dasar</th><th class="num">Harga</th><th class="num">Subtotal</th><th class="num">Riwayat harga / dasar</th></tr></thead><tbody>
     @foreach($purchase->items as $l)
       @php $h = $priceHistory->get($l->inventory_item_id); $perBase = $l->factor > 0 ? $l->price / $l->factor : 0; @endphp

@@ -17,7 +17,7 @@
     </div>
     <div class="card table-wrap">
       <table class="table">
-        <thead><tr><th>Waktu</th><th>Bahan</th><th>Alasan</th><th class="num">Jumlah</th><th class="num">Nilai</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Waktu</th><th>Bahan</th><th>Alasan</th><th class="num">Jumlah</th><th class="num">Nilai</th><th>Status</th><th>Aksi</th></tr></thead>
         <tbody>
         @forelse($records as $w)
           <tr><td>{{ $w->created_at->format('d/m H:i') }}<br><small>{{ $w->requester?->name }}</small></td><td>{{ $w->item->name }}</td>
