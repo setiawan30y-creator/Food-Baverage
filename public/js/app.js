@@ -38,3 +38,34 @@ window.api = async function (url, data, method) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
   }
 })();
+
+/* ---------- PWA: tombol "Pasang aplikasi" & petunjuk iPhone/iPad ---------- */
+(function () {
+  var deferred = null;
+  function toggle(sel, show) { document.querySelectorAll(sel).forEach(function (el) { el.hidden = !show; }); }
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferred = e;
+    toggle('[data-pwa-install]', true);
+  });
+  window.addEventListener('appinstalled', function () { deferred = null; toggle('[data-pwa-install]', false); });
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest && e.target.closest('[data-pwa-install]');
+    if (btn && deferred) {
+      deferred.prompt();
+      deferred.userChoice.finally(function () { deferred = null; toggle('[data-pwa-install]', false); });
+    }
+    var close = e.target.closest && e.target.closest('[data-pwa-ios-close]');
+    if (close) {
+      toggle('[data-pwa-ios]', false);
+      try { localStorage.setItem('pwa-ios-hint', '1'); } catch (x) {}
+    }
+  });
+  document.addEventListener('DOMContentLoaded', function () {
+    var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var standalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    var dismissed = false;
+    try { dismissed = localStorage.getItem('pwa-ios-hint') === '1'; } catch (x) {}
+    if (ios && !standalone && !dismissed) toggle('[data-pwa-ios]', true);
+  });
+})();

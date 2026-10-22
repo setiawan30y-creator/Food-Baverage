@@ -30,6 +30,10 @@ class DatabaseSeeder extends Seeder
             'status' => 'active',
             'max_branches' => 5,
             'max_users' => 50,
+            'owner_name' => 'Pemilik Usaha',
+            'email' => 'owner@contoh.test',
+            'phone' => '080000000000',
+            'subscription_ends_at' => today()->addYear(),
         ]);
         tenancy()->setTenant($tenant);
 
@@ -96,6 +100,9 @@ class DatabaseSeeder extends Seeder
         foreach (range(1, 8) as $i) {
             DiningTable::create(['branch_id' => $branch->id, 'name' => 'Meja '.$i, 'area' => $i <= 5 ? 'Dalam' : 'Teras', 'capacity' => 4, 'qr_token' => Str::random(40)]);
         }
+
+        // Akun Super Admin platform (pemilik SaaS) — tidak terikat usaha mana pun
+        User::create(['tenant_id' => null, 'branch_id' => null, 'name' => 'Super Admin', 'email' => 'superadmin@contoh.test', 'role' => 'superadmin', 'password' => 'password', 'is_active' => true]);
 
         // Katalog contoh: menu snack (kentang crispy, kentang spiral, corndog, dll.)
         auth()->login($userModels['owner']);

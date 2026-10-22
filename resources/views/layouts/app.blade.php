@@ -48,6 +48,7 @@
       ['settings.theme', 'Tema', 'sun', 'settings', 'settings.theme'],
       ['settings.branches', 'Cabang', 'pin', 'settings', 'settings.branches'],
       ['settings.users', 'Pengguna', 'users', 'settings', 'settings.users'],
+      ['subscription.index', 'Langganan', 'wallet', 'settings', 'subscription.*'],
     ],
   ];
   $branches = $u->branch_id ? collect([$currentBranch]) : \App\Models\Branch::where('is_active', true)->orderBy('name')->get();
@@ -85,6 +86,7 @@
         <span class="badge badge-primary"><x-icon name="pin" style="width:13px;height:13px;margin-right:4px"/>{{ $currentBranch->name }}</span>
       @endif
       <div class="spacer"></div>
+      <button type="button" class="btn btn-sm" data-pwa-install hidden><x-icon name="plus" style="width:15px;height:15px"/> Pasang aplikasi</button>
       <form method="POST" action="{{ route('me.theme') }}" x-data>
         @csrf
         <input type="hidden" name="theme_mode" :value="document.documentElement.dataset.mode === 'dark' ? 'light' : 'dark'">
@@ -95,6 +97,21 @@
     </header>
 
     <main class="content">
+      @if(session('impersonator_id'))
+        <div class="alert alert-warn row between" style="flex-wrap:wrap">
+          <span><b>Mode dukungan:</b> Anda masuk sebagai {{ $u->name }} ({{ $currentTenant->name }}). Semua tindakan tercatat.</span>
+          <form method="POST" action="{{ route('impersonate.stop') }}">@csrf<button class="btn btn-sm">Kembali ke Super Admin</button></form>
+        </div>
+      @endif
+      @if($u->role === 'owner' && $currentTenant->isUsable())
+        @php $subSt = $currentTenant->effectiveStatus(); $subDays = $currentTenant->daysLeft(); @endphp
+        @if($subSt === 'past_due' || ($subDays !== null && $subDays <= 5))
+          <div class="alert {{ $subSt === 'past_due' ? 'alert-danger' : 'alert-warn' }} row between" style="flex-wrap:wrap">
+            <span>@if($subSt === 'past_due')Langganan sudah lewat jatuh tempo — akses akan dikunci setelah masa tenggang.@elseif($subSt === 'trial')Masa trial tinggal {{ max(0, $subDays) }} hari.@else Langganan berakhir dalam {{ max(0, $subDays) }} hari.@endif</span>
+            <a href="{{ route('subscription.index') }}" class="btn btn-sm btn-primary">Perpanjang</a>
+          </div>
+        @endif
+      @endif
       @include('partials.flash')
       @yield('content')
     </main>
@@ -102,6 +119,7 @@
   </div>
 </div>
 <div id="net-status" class="alert alert-warn no-print" style="display:none;position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:90;margin:0">Koneksi terputus. Transaksi yang membutuhkan server tidak dapat dikirim sampai koneksi pulih.</div>
+@include('partials.pwa-ios-hint')
 @stack('scripts')
 </body>
 </html>

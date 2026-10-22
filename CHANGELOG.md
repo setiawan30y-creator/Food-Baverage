@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0 — 2026-10-22
+- SaaS: paket Basic/Pro/Enterprise dengan modul & batas; menu di luar paket tersembunyi & terkunci di server.
+- Panel Super Admin `/admin`: dasbor platform, kelola penyewa, tagihan & verifikasi bukti bayar, pengaturan platform, "Masuk sebagai" pemilik (teraudit).
+- Pendaftaran mandiri `/daftar` dengan trial & opsi contoh menu; langkah awal di Dasbor.
+- Halaman Langganan untuk pemilik: tagihan, unggah bukti transfer, perpanjangan otomatis setelah diverifikasi; masa tenggang & penguncian tanpa menghapus data.
+- Perintah `saas:superadmin`, `saas:check-subscriptions` (terjadwal harian).
+- PWA: manifest dinamis per usaha (nama, warna, ikon dari logo), PWA pelanggan per usaha, pintasan, ikon maskable, halaman offline, tombol pasang & petunjuk iPhone.
+- Migrasi baru: php artisan migrate. @2026-Alifiandra
+
 ## 1.1.0 — 2026-10-22
 - Sisa porsi menu otomatis dari stok bahan × resep (dikurangi pesanan yang belum dibayar), tampil sebagai badge "Sisa N" di kasir, kolom "Sisa porsi" di halaman Menu (beserta bahan pembatasnya), dan kartu "Menu hampir habis" di Dasbor.
 - Menu habis otomatis gelap & tidak bisa dipilih di kasir maupun menu pelanggan (QR / Order Ahead); server menolak pesanan yang melebihi stok, termasuk bahan yang dipakai bersama beberapa menu dalam satu keranjang.

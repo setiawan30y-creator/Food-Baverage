@@ -7,7 +7,7 @@
 
 return [
     'product_name' => 'ALMARA Restaurant & Beverage OS',
-    'version' => '1.1.0',
+    'version' => '1.2.0',
     'signature' => '@2026-Alifiandra',
 
     /*
@@ -28,6 +28,53 @@ return [
         'kitchen' => ['label' => 'Dapur / Bar', 'abilities' => ['kitchen', 'production', 'attendance.self']],
         'warehouse' => ['label' => 'Gudang', 'abilities' => ['dashboard', 'inventory', 'purchasing', 'production', 'attendance.self']],
         'staff' => ['label' => 'Staf', 'abilities' => ['attendance.self']],
+    ],
+
+    /*
+    | Paket langganan SaaS. Modul yang tidak ada di paket otomatis tersembunyi
+    | & terkunci di server. Harga per bulan (Rupiah); 12 bulan = bayar 10 bulan.
+    */
+    'plans' => [
+        'basic' => [
+            'label' => 'Basic', 'price' => 99000, 'max_branches' => 1, 'max_users' => 5,
+            'modules' => ['pos', 'kitchen', 'inventory', 'reports'],
+            'tagline' => 'Kasir, dapur, stok & resep untuk 1 outlet',
+        ],
+        'pro' => [
+            'label' => 'Pro', 'price' => 249000, 'max_branches' => 3, 'max_users' => 25,
+            'modules' => ['pos', 'kitchen', 'inventory', 'reports', 'online_order', 'hr', 'payroll'],
+            'tagline' => '+ QR meja, Order Ahead, karyawan, absensi GPS & payroll',
+        ],
+        'enterprise' => [
+            'label' => 'Enterprise', 'price' => 599000, 'max_branches' => 20, 'max_users' => 200,
+            'modules' => ['pos', 'kitchen', 'inventory', 'reports', 'online_order', 'hr', 'payroll'],
+            'tagline' => 'Semua fitur untuk grup usaha multi-cabang',
+        ],
+    ],
+
+    'modules' => [
+        'pos' => 'Kasir & pesanan', 'kitchen' => 'Layar dapur (KDS)', 'inventory' => 'Stok, resep, produksi & pembelian',
+        'reports' => 'Laporan', 'online_order' => 'QR meja & Order Ahead', 'hr' => 'Karyawan, jadwal & absensi GPS', 'payroll' => 'Payroll & slip gaji',
+    ],
+
+    // Kemampuan (ability) → modul paket. Kemampuan yang tidak tercantum selalu tersedia.
+    'ability_modules' => [
+        'kitchen' => 'kitchen', 'inventory' => 'inventory', 'purchasing' => 'inventory', 'recipes' => 'inventory',
+        'production' => 'inventory', 'employees' => 'hr', 'schedule' => 'hr', 'attendance' => 'hr', 'payroll' => 'payroll',
+        'reports' => 'reports',
+    ],
+
+    'billing_months' => [1 => '1 bulan', 3 => '3 bulan', 6 => '6 bulan', 12 => '12 bulan (hemat 2 bulan)'],
+
+    // Nilai bawaan pengaturan platform (bisa diubah Super Admin)
+    'platform_defaults' => [
+        'trial_days' => 14,
+        'grace_days' => 3,
+        'bank_name' => 'Nama Bank',
+        'bank_account' => '0000000000',
+        'bank_holder' => 'Nama Pemilik Rekening',
+        'support_whatsapp' => '080000000000',
+        'registration_open' => '1',
     ],
 
     'payment_methods' => [

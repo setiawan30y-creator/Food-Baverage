@@ -60,7 +60,23 @@ class DashboardController extends Controller
             ->filter(fn ($s) => $s['stock'] !== null && $s['stock'] <= 5)
             ->map(fn ($s, $id) => $s + ['menu' => $menus->firstWhere('id', $id)])->sortBy('stock')->take(8);
 
-        return view('dashboard', compact('stats', 'trend', 'top', 'lowStock', 'pendingWaste', 'pendingClosing', 'menuStock'));
+        $onboarding = [];
+        if (auth()->user()->role === 'owner') {
+            $profile = \App\Models\CompanyProfile::first();
+            $onboarding = [
+                ['Lengkapi profil & unggah logo usaha', (bool) $profile?->logo_path, route('settings.company')],
+                ['Atur lokasi, jam buka & pajak cabang', (bool) $this->branch()->latitude, route('settings.branches')],
+                ['Tambah menu & harga', \App\Models\Menu::exists(), route('menus.create')],
+                ['Buat resep agar HPP & sisa porsi terhitung', \App\Models\Recipe::where('type', 'menu')->exists(), route('recipes.index')],
+                ['Isi saldo awal stok bahan', \App\Models\StockMovement::where('branch_id', $this->branchId())->exists(), route('inventory.opening')],
+                ['Tambah akun kasir / staf', \App\Models\User::where('tenant_id', tenancy()->tenantId())->count() > 1, route('settings.users')],
+            ];
+            if (collect($onboarding)->every(fn ($s) => $s[1])) {
+                $onboarding = [];
+            }
+        }
+
+        return view('dashboard', compact('stats', 'trend', 'top', 'lowStock', 'pendingWaste', 'pendingClosing', 'menuStock', 'onboarding'));
     }
 
     public function switchBranch(Request $request)

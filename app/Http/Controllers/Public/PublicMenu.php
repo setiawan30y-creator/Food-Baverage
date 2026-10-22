@@ -14,7 +14,7 @@ trait PublicMenu
 {
     protected function bootTenant(Tenant $tenant, ?Branch $branch = null): void
     {
-        abort_unless($tenant->isUsable(), 404);
+        abort_unless($tenant->isUsable() && $tenant->hasModule('online_order'), 404);
         tenancy()->setTenant($tenant);
         if ($branch) {
             abort_unless($branch->tenant_id === $tenant->id && $branch->is_active, 404);

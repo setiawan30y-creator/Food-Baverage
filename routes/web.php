@@ -6,10 +6,17 @@
  */
 
 use App\Http\Controllers;
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Public;
 use App\Http\Controllers\Settings;
 use Illuminate\Support\Facades\Route;
+
+// ---------- PWA ----------
+Route::get('/manifest.webmanifest', [Controllers\PwaController::class, 'manifest'])->name('pwa.manifest');
+Route::get('/o/{slug}/manifest.webmanifest', [Controllers\PwaController::class, 'customer'])->name('pwa.customer');
+Route::get('/pwa/icon/{tenant}/{size}.png', [Controllers\PwaController::class, 'icon'])->whereNumber(['tenant', 'size'])->name('pwa.icon');
 
 // ---------- Publik (pelanggan, tanpa login) ----------
 Route::get('/media/logo/{tenant}', [Controllers\MediaController::class, 'logo'])->name('media.logo');
@@ -30,8 +37,31 @@ Route::get('/nota/{token}', [Public\TrackController::class, 'receipt'])->name('t
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:login');
+    Route::get('/daftar', [RegisterController::class, 'show'])->name('register');
+    Route::post('/daftar', [RegisterController::class, 'store'])->middleware('throttle:register');
 });
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
+Route::post('/impersonate/stop', [Controllers\ImpersonationController::class, 'stop'])->middleware('auth')->name('impersonate.stop');
+
+// ---------- Super Admin (pemilik platform SaaS) ----------
+Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/tenants', [AdminController::class, 'tenants'])->name('tenants');
+    Route::get('/tenants/create', [AdminController::class, 'createTenant'])->name('tenants.create');
+    Route::post('/tenants', [AdminController::class, 'storeTenant'])->name('tenants.store');
+    Route::get('/tenants/{tenant}', [AdminController::class, 'showTenant'])->name('tenants.show');
+    Route::put('/tenants/{tenant}', [AdminController::class, 'updateTenant'])->name('tenants.update');
+    Route::post('/tenants/{tenant}/suspend', [AdminController::class, 'suspend'])->name('tenants.suspend');
+    Route::post('/tenants/{tenant}/activate', [AdminController::class, 'activate'])->name('tenants.activate');
+    Route::post('/tenants/{tenant}/impersonate', [AdminController::class, 'impersonate'])->name('tenants.impersonate');
+    Route::post('/tenants/{tenant}/invoices', [AdminController::class, 'createInvoice'])->name('tenants.invoices.store');
+    Route::get('/invoices', [AdminController::class, 'invoices'])->name('invoices');
+    Route::post('/invoices/{invoice}/paid', [AdminController::class, 'markPaid'])->whereNumber('invoice')->name('invoices.paid');
+    Route::post('/invoices/{invoice}/void', [AdminController::class, 'voidInvoice'])->whereNumber('invoice')->name('invoices.void');
+    Route::get('/invoices/{invoice}/proof', [AdminController::class, 'invoiceProof'])->whereNumber('invoice')->name('invoices.proof');
+    Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
+    Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
+});
 
 // ---------- Aplikasi (login + konteks tenant) ----------
 Route::middleware(['auth', 'tenant'])->group(function () {
@@ -207,6 +237,15 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/waste', [Controllers\ReportController::class, 'waste'])->name('waste');
     });
     Route::get('/audit', [Controllers\AuditController::class, 'index'])->middleware('ability:audit')->name('audit.index');
+
+    // Langganan (pemilik) — tetap bisa dibuka walau langganan berakhir
+    Route::middleware('ability:settings')->prefix('langganan')->name('subscription.')->group(function () {
+        Route::get('/', [Controllers\SubscriptionController::class, 'index'])->name('index');
+        Route::post('/', [Controllers\SubscriptionController::class, 'store'])->name('store');
+        Route::get('/tagihan/{invoice}', [Controllers\SubscriptionController::class, 'show'])->name('invoice');
+        Route::post('/tagihan/{invoice}/bukti', [Controllers\SubscriptionController::class, 'uploadProof'])->name('proof.upload');
+        Route::get('/tagihan/{invoice}/bukti', [Controllers\SubscriptionController::class, 'proof'])->name('proof');
+    });
 
     // Pengaturan (pemilik)
     Route::middleware('ability:settings')->prefix('settings')->name('settings.')->group(function () {

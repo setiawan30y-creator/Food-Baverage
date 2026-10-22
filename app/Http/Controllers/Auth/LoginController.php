@@ -30,6 +30,9 @@ class LoginController extends Controller
         $request->session()->forget('branch_id');
 
         $user = $request->user();
+        if ($user->isSuperAdmin()) {
+            return redirect()->intended(route('admin.dashboard'));
+        }
         $home = match (true) {
             $user->hasAbility('dashboard') => route('dashboard'),
             $user->hasAbility('kitchen') => route('kitchen.index'),

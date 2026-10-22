@@ -9,6 +9,18 @@
   </div>
 </div>
 
+@if(!empty($onboarding))
+  @php $done = collect($onboarding)->where(1, true)->count(); @endphp
+  <div class="card card-pad" style="margin-bottom:16px">
+    <div class="row between"><h3>Langkah awal ({{ $done }}/{{ count($onboarding) }})</h3><div class="bar" style="width:180px"><span style="width:{{ $done / count($onboarding) * 100 }}%"></span></div></div>
+    <div class="grid g3" style="gap:8px;margin-top:12px">
+      @foreach($onboarding as [$label, $ok, $url])
+        <a href="{{ $url }}" class="row" style="gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;color:var(--text);text-decoration:none;{{ $ok ? 'opacity:.6' : '' }}">
+          <span class="badge {{ $ok ? 'badge-ok' : 'badge-muted' }}" style="min-width:24px;justify-content:center">{{ $ok ? '✓' : '·' }}</span><span>{{ $label }}</span></a>
+      @endforeach
+    </div>
+  </div>
+@endif
 @if($stats['new_online'] > 0)
   <div class="alert alert-info">Ada <b>{{ $stats['new_online'] }}</b> pesanan QR / Order Ahead menunggu diterima. <a href="{{ route('orders.index', ['status' => 'new']) }}">Lihat pesanan →</a></div>
 @endif

@@ -4,10 +4,20 @@
   $mode = auth()->user()?->theme_mode ?: ($t->mode ?? 'system');
   $font = $t->font ?? 'Plus Jakarta Sans';
 @endphp
+@php
+  $pwaTenant = $currentTenant ?? null;
+  $pwaName = ($companyProfile ?? null)?->name ?? $pwaTenant?->name ?? 'ALMARA F&B';
+  $pwaManifest = $manifestUrl ?? (($pwaTenant && request()->is('o/*')) ? route('pwa.customer', $pwaTenant->slug) : route('pwa.manifest'));
+  $pwaIcon = ($pwaTenant && ($companyProfile ?? null)?->logo_path) ? route('pwa.icon', [$pwaTenant->id, 192]).'?v='.$companyProfile->updated_at?->timestamp : asset('icons/icon-192.png');
+@endphp
 <meta name="theme-color" content="{{ $t->primary ?? '#C2410C' }}">
-<link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+<link rel="manifest" href="{{ $pwaManifest }}" crossorigin="use-credentials">
 <link rel="icon" href="{{ asset('icons/icon.svg') }}" type="image/svg+xml">
-<link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
+<link rel="apple-touch-icon" href="{{ $pwaIcon }}">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="{{ \Illuminate\Support\Str::limit($pwaName, 14, '') }}">
 @if($font !== 'System')
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

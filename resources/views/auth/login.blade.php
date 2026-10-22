@@ -24,6 +24,9 @@
         <div class="field"><label class="check"><input type="checkbox" name="remember" value="1"> Ingat saya di perangkat ini</label></div>
         <button class="btn btn-primary btn-block btn-lg">Masuk</button>
       </form>
+      @if(\App\Models\PlatformSetting::get('registration_open') === '1')
+        <p class="muted" style="text-align:center;margin:14px 0 0">Belum punya akun? <a href="{{ route('register') }}">Daftarkan usaha — gratis {{ \App\Models\PlatformSetting::get('trial_days') }} hari</a></p>
+      @endif
     </div>
     <p class="muted" style="text-align:center;font-size:12px;margin-top:16px">{{ config('fnb.signature') }}</p>
   </div>

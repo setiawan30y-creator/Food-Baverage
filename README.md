@@ -54,6 +54,37 @@ php artisan serve
 Buka `http://127.0.0.1:8000` (atau `http://food-baverage.test` lewat Laragon).
 Tidak perlu `npm run build` — CSS/JS sudah siap di `public/`.
 
+## SaaS: paket, Super Admin & langganan
+
+| Bagian | Alamat | Keterangan |
+|---|---|---|
+| Pendaftaran mandiri | `/daftar` | Calon penyewa memilih paket, langsung trial (default 14 hari), opsional isi contoh menu snack |
+| Panel Super Admin | `/admin` | Dasbor platform (MRR, penyewa, tagihan), kelola penyewa (paket, batas, masa aktif, tangguhkan/aktifkan), verifikasi bukti bayar, pengaturan rekening & trial, **Masuk sebagai pemilik** untuk dukungan (tercatat di audit) |
+| Langganan (pemilik usaha) | `/langganan` | Lihat paket & sisa hari, pilih paket + durasi, transfer, unggah bukti; aktif otomatis setelah diverifikasi |
+
+**Paket** (ubah di `config/fnb.php` → `plans`): Basic, Pro, Enterprise. Menu yang tidak termasuk paket otomatis tersembunyi dan terkunci di server
+(mis. Basic tanpa QR meja/Order Ahead, karyawan, absensi & payroll). Batas cabang & pengguna mengikuti paket.
+
+**Status penyewa** dihitung dari tanggal: Trial → Aktif → Masa tenggang (default 3 hari, masih bisa dipakai + peringatan) → Berakhir.
+Saat berakhir/ditangguhkan, pemilik hanya bisa membuka halaman Langganan; staf tidak bisa login. **Data tidak pernah dihapus.**
+
+Akun Super Admin contoh: `superadmin@contoh.test` / `password`. Untuk database yang sudah ada, buat Super Admin (PowerShell):
+
+```powershell
+php artisan migrate
+php artisan saas:superadmin admin@domainanda.com
+```
+
+Pemeriksaan harian (status & tagihan perpanjangan otomatis) berjalan lewat scheduler. Di server Linux: cron `* * * * * php artisan schedule:run`.
+Di Laragon untuk uji coba: `php artisan schedule:work` (biarkan jendela terbuka) atau jalankan manual `php artisan saas:check-subscriptions`.
+
+## PWA (pasang sebagai aplikasi)
+- **Aplikasi staf**: nama, warna & ikon mengikuti profil usaha (ikon dibuat otomatis dari logo), pintasan Kasir/Dapur/Absen/Pesanan sesuai hak akses.
+- **Aplikasi pelanggan**: tiap usaha punya aplikasi Order Ahead sendiri (`/o/nama-usaha`).
+- Tombol **Pasang aplikasi** muncul otomatis di Chrome/Edge (Android & desktop); di iPhone/iPad tampil petunjuk *Bagikan → Tambahkan ke Layar Utama*.
+- Saat offline tampil halaman offline; transaksi tetap hanya sah bila terkirim ke server.
+- Pemasangan PWA butuh **HTTPS** (kecuali `localhost`). Di Laragon: klik kanan → Apache → SSL → Enabled, lalu buka `https://food-baverage.test`.
+
 ### Sisa porsi & menu habis
 Sisa porsi tiap menu dihitung otomatis dari **stok bahan × resep** cabang aktif, dikurangi bahan untuk pesanan yang belum dibayar.
 Menu yang habis otomatis gelap dan tidak bisa dipesan, baik di kasir maupun di menu pelanggan; server juga menolak pesanan yang melebihi stok.
@@ -85,6 +116,7 @@ php artisan migrate:fresh --seed
 
 | Peran | Email |
 |---|---|
+| Super Admin (platform) | superadmin@contoh.test |
 | Pemilik | owner@contoh.test |
 | Manajer | manajer@contoh.test |
 | Kasir | kasir@contoh.test |

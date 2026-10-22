@@ -12,13 +12,15 @@
 <div class="public-wrap">
   <div class="public-head">
     @include('partials.brand')
-    <div><h2>{{ $companyProfile->name ?? $currentTenant->name }}</h2>@hasSection('subtitle')<small>@yield('subtitle')</small>@endif</div>
+    <div style="flex:1"><h2>{{ $companyProfile->name ?? $currentTenant->name }}</h2>@hasSection('subtitle')<small>@yield('subtitle')</small>@endif</div>
+    @if(request()->is('o/*'))<button type="button" class="btn btn-sm" data-pwa-install hidden>Pasang aplikasi</button>@endif
   </div>
   @include('partials.flash')
   @yield('content')
   <p class="muted" style="text-align:center;font-size:12px;margin-top:24px">Didukung {{ config('fnb.product_name') }} · {{ config('fnb.signature') }}</p>
 </div>
 <div id="net-status" class="alert alert-warn" style="display:none;position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:90;margin:0">Koneksi terputus. Pesanan belum bisa dikirim.</div>
+@if(request()->is('o/*'))@include('partials.pwa-ios-hint')@endif
 @stack('scripts')
 </body>
 </html>

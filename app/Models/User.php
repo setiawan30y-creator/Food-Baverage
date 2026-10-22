@@ -53,15 +53,33 @@ class User extends Authenticatable
         return $map[$this->role]['abilities'] ?? [];
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'superadmin' && $this->tenant_id === null;
+    }
+
+    /** Hak akses = peran pengguna DAN modul paket langganan usaha. */
     public function hasAbility(string $ability): bool
     {
+        if ($this->isSuperAdmin()) {
+            return false; // Super Admin tidak mengoperasikan usaha (gunakan "Masuk sebagai")
+        }
         $abilities = $this->abilities();
+        if (! in_array('*', $abilities, true) && ! in_array($ability, $abilities, true)) {
+            return false;
+        }
+        $map = config('fnb.ability_modules', []);
+        $module = $map[$ability] ?? $map[explode('.', $ability)[0]] ?? null;
 
-        return in_array('*', $abilities, true) || in_array($ability, $abilities, true);
+        return ! $module || ! $this->tenant || $this->tenant->hasModule($module);
     }
 
     public function roleLabel(): string
     {
+        if ($this->role === 'superadmin') {
+            return 'Super Admin';
+        }
+
         return config("fnb.roles.{$this->role}.label", ucfirst($this->role));
     }
 
