@@ -236,6 +236,21 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('/stock', [Controllers\ReportController::class, 'stock'])->name('stock');
         Route::get('/waste', [Controllers\ReportController::class, 'waste'])->name('waste');
     });
+    // Riwayat penjualan (pesanan lunas per metode & rekening)
+    Route::get('/riwayat-penjualan', [Controllers\SalesHistoryController::class, 'index'])->middleware('ability:orders')->name('sales.history');
+
+    // Keuangan: saldo kas & rekening (bank, QRIS, e-wallet)
+    Route::middleware('ability:finance')->prefix('keuangan')->name('finance.')->group(function () {
+        Route::get('/rekening', [Controllers\FinanceController::class, 'index'])->name('index');
+        Route::get('/rekening/baru', [Controllers\FinanceController::class, 'create'])->name('create');
+        Route::post('/rekening', [Controllers\FinanceController::class, 'store'])->name('store');
+        Route::post('/pindah-dana', [Controllers\FinanceController::class, 'transfer'])->name('transfer');
+        Route::get('/rekening/{account}', [Controllers\FinanceController::class, 'show'])->name('show');
+        Route::get('/rekening/{account}/ubah', [Controllers\FinanceController::class, 'edit'])->name('edit');
+        Route::put('/rekening/{account}', [Controllers\FinanceController::class, 'update'])->name('update');
+        Route::post('/rekening/{account}/mutasi', [Controllers\FinanceController::class, 'mutation'])->name('mutation');
+    });
+
     Route::get('/audit', [Controllers\AuditController::class, 'index'])->middleware('ability:audit')->name('audit.index');
 
     // Langganan (pemilik) — tetap bisa dibuka walau langganan berakhir

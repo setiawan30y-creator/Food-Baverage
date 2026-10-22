@@ -17,6 +17,7 @@
       ['dashboard', 'Dasbor', 'home', 'dashboard', 'dashboard'],
       ['pos.index', 'Kasir (POS)', 'pos', 'pos', 'pos.*'],
       ['orders.index', 'Pesanan', 'receipt', 'orders', 'orders.*'],
+      ['sales.history', 'Riwayat Penjualan', 'archive', 'orders', 'sales.history'],
       ['tables.index', 'Meja & QR', 'table', 'tables', 'tables.*'],
       ['kitchen.index', 'Dapur (KDS)', 'fire', 'kitchen', 'kitchen.*'],
       ['cashier.index', 'Shift & Closing', 'cash', 'closing', 'cashier.*'],
@@ -26,7 +27,8 @@
       ['menus.index', 'Menu', 'menu', 'menu', 'menus.*'],
       ['recipes.index', 'Resep & HPP', 'flask', 'recipes', 'recipes.*'],
       ['production.index', 'Produksi Racikan', 'flask', 'production', 'production.*'],
-      ['inventory.stock', 'Stok Bahan', 'box', 'inventory', 'inventory.*'],
+      ['inventory.stock', 'Stok Bahan', 'box', 'inventory', 'inventory.stock|inventory.ledger|inventory.items.*|inventory.waste.*|inventory.counts.*'],
+      ['inventory.opening', 'Saldo Awal Stok', 'box', 'inventory', 'inventory.opening'],
       ['purchases.index', 'Pembelian', 'truck', 'purchasing', 'purchases.*'],
     ],
     'SDM' => [
@@ -37,6 +39,9 @@
       ['leaves.index', 'Izin / Cuti / Lembur', 'calendar', 'attendance.self', 'leaves.*'],
       ['payroll.index', 'Payroll', 'wallet', 'payroll', 'payroll.index|payroll.show'],
       ['payroll.mine', 'Slip Gaji Saya', 'wallet', 'attendance.self', 'payroll.mine'],
+    ],
+    'Keuangan' => [
+      ['finance.index', 'Saldo Kas & Rekening', 'wallet', 'finance', 'finance.*'],
     ],
     'Analisis' => [
       ['reports.sales', 'Laporan', 'chart', 'reports', 'reports.*'],

@@ -25,6 +25,11 @@ class Payment extends Model
         return $this->belongsTo(Order::class);
     }
 
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(PaymentAccount::class, 'payment_account_id');
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

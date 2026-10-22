@@ -23,7 +23,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family={{ urlencode($font) }}:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 @endif
-<link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ config('fnb.version') }}">
+<link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ @filemtime(public_path('css/app.css')) ?: config('fnb.version') }}">
 <style>
 :root {
   --primary: {{ $t->primary ?? '#C2410C' }}; --accent: {{ $t->accent ?? '#15803D' }};
@@ -40,4 +40,4 @@
   })();
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
-<script src="{{ asset('js/app.js') }}?v={{ config('fnb.version') }}"></script>
+<script src="{{ asset('js/app.js') }}?v={{ @filemtime(public_path('js/app.js')) ?: config('fnb.version') }}"></script>

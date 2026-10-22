@@ -7,7 +7,7 @@
 
 return [
     'product_name' => 'ALMARA Restaurant & Beverage OS',
-    'version' => '1.2.0',
+    'version' => '1.3.0',
     'signature' => '@2026-Alifiandra',
 
     /*
@@ -18,7 +18,7 @@ return [
         'manager' => ['label' => 'Manajer', 'abilities' => [
             'dashboard', 'pos', 'orders', 'orders.void', 'kitchen', 'tables', 'menu', 'menu.price', 'inventory',
             'inventory.approve', 'purchasing', 'recipes', 'production', 'closing', 'closing.approve',
-            'employees', 'schedule', 'attendance.self', 'attendance.manage', 'payroll', 'reports', 'audit',
+            'employees', 'schedule', 'attendance.self', 'attendance.manage', 'payroll', 'reports', 'finance', 'audit',
         ]],
         'admin' => ['label' => 'Admin', 'abilities' => [
             'dashboard', 'orders', 'menu', 'inventory', 'purchasing', 'recipes', 'employees', 'schedule',
@@ -61,7 +61,7 @@ return [
     'ability_modules' => [
         'kitchen' => 'kitchen', 'inventory' => 'inventory', 'purchasing' => 'inventory', 'recipes' => 'inventory',
         'production' => 'inventory', 'employees' => 'hr', 'schedule' => 'hr', 'attendance' => 'hr', 'payroll' => 'payroll',
-        'reports' => 'reports',
+        'reports' => 'reports', 'finance' => 'reports',
     ],
 
     'billing_months' => [1 => '1 bulan', 3 => '3 bulan', 6 => '6 bulan', 12 => '12 bulan (hemat 2 bulan)'],

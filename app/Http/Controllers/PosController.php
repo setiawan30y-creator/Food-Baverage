@@ -46,6 +46,7 @@ class PosController extends Controller
             'openOrders' => Order::forBranch()->where('payment_status', '!=', 'paid')->whereNotIn('status', ['cancelled'])
                 ->with('table')->latest()->limit(30)->get(),
             'branch' => $this->branch(),
+            'accounts' => app(\App\Domain\Finance\AccountService::class)->optionsFor($this->branchId()),
         ]);
     }
 
@@ -122,6 +123,7 @@ class PosController extends Controller
             'received' => ['nullable', 'numeric', 'min:0'],
             'reference' => ['nullable', 'string', 'max:100'],
             'idempotency_key' => ['nullable', 'string', 'max:80'],
+            'payment_account_id' => ['nullable', 'integer'],
         ]);
         if ($data['method'] !== 'cash' && ! trim((string) ($data['reference'] ?? ''))) {
             $msg = 'Isi nomor referensi / bukti pembayaran non-tunai yang sudah diverifikasi.';
@@ -129,7 +131,7 @@ class PosController extends Controller
             return $request->expectsJson() ? response()->json(['message' => $msg], 422) : back()->with('error', $msg);
         }
 
-        $payment = $orders->pay($order, $data['method'], (float) ($data['received'] ?? 0), $data['reference'] ?? null, $shift, $data['idempotency_key'] ?? (string) Str::uuid());
+        $payment = $orders->pay($order, $data['method'], (float) ($data['received'] ?? 0), $data['reference'] ?? null, $shift, $data['idempotency_key'] ?? (string) Str::uuid(), isset($data['payment_account_id']) ? (int) $data['payment_account_id'] : null);
 
         if ($request->expectsJson()) {
             return response()->json(['ok' => true, 'change' => (float) $payment->change, 'receipt_url' => route('orders.receipt', $order)]);

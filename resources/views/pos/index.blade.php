@@ -121,7 +121,7 @@
             <div class="row between"><span class="muted">Total tagihan</span><span class="total-big" x-text="rupiah(payOrder.total)"></span></div>
             <div class="seg" style="margin:14px 0;width:100%;display:flex">
               @foreach(config('fnb.payment_methods') as $k => $label)
-                <button type="button" style="flex:1" :class="{on: method==='{{ $k }}'}" @click="method='{{ $k }}'">{{ $label }}</button>
+                <button type="button" style="flex:1" :class="{on: method==='{{ $k }}'}" @click="setMethod('{{ $k }}')">{{ $label }}</button>
               @endforeach
             </div>
             <div x-show="method==='cash'">
@@ -136,6 +136,11 @@
             <div x-show="method!=='cash'">
               <div class="alert alert-info" style="margin-bottom:10px">Konfirmasi hanya setelah dana benar-benar masuk (cek notifikasi/aplikasi merchant).</div>
               <label>No. referensi / bukti transaksi</label><input type="text" x-model="reference" placeholder="contoh: 4 digit akhir ID transaksi">
+            </div>
+            <div x-show="accList.length" style="margin-top:10px">
+              <label>Masuk ke rekening</label>
+              <template x-if="accList.length === 1"><div class="badge badge-muted" style="font-size:13px;padding:6px 10px" x-text="accList[0].label"></div></template>
+              <select x-show="accList.length > 1" x-model="account"><option value="">— pilih rekening tujuan —</option><template x-for="a in accList" :key="a.id"><option :value="a.id" x-text="a.label"></option></template></select>
             </div>
             <p class="error-text" x-show="payError" x-text="payError"></p>
             <button type="button" class="btn btn-accent btn-lg btn-block" style="margin-top:14px" @click="pay()" :disabled="paying" x-text="paying ? 'Memverifikasi ke server…' : 'Konfirmasi pembayaran'"></button>
@@ -165,6 +170,9 @@ function pos() {
     q: '', cat: null, type: 'dine_in', table: '', cart: [], customer_name: '', customer_phone: '', discount: 0, discount_reason: '', note: '',
     idem: uuid(), busy: false, error: '', modMenu: null, modSel: [],
     payOrder: null, method: 'cash', received: 0, reference: '', paying: false, paid: false, change: 0, payError: '', payKey: null,
+    accounts: @js($accounts), account: '',
+    get accList() { return this.accounts[this.method] || []; },
+    setMethod(k) { this.method = k; this.account = this.accList.length === 1 ? this.accList[0].id : ''; },
     get filtered() { const q = this.q.toLowerCase(); return this.menus.filter(m => (this.cat === null || m.category === this.cat) && (!q || m.name.toLowerCase().includes(q))); },
     get subtotal() { return this.cart.reduce((s, l) => s + this.lineTotal(l), 0); },
     get base() { return Math.max(0, this.subtotal - (Number(this.discount) || 0)); },
@@ -212,12 +220,12 @@ function pos() {
       } catch (e) { this.error = e.message; this.refreshStock(); }
       this.busy = false;
     },
-    openPay(o) { this.payOrder = o; this.method = 'cash'; this.received = o.total; this.reference = ''; this.paid = false; this.payError = ''; this.payKey = uuid(); },
+    openPay(o) { this.payOrder = o; this.setMethod('cash'); this.received = o.total; this.reference = ''; this.paid = false; this.payError = ''; this.payKey = uuid(); },
     closePay(reload) { this.payOrder = null; if (reload || this.paid) location.reload(); },
     async pay() {
       this.paying = true; this.payError = '';
       try {
-        const r = await api(this.payOrder.pay_url, { method: this.method, received: Number(this.received) || 0, reference: this.reference || null, idempotency_key: this.payKey });
+        const r = await api(this.payOrder.pay_url, { method: this.method, received: Number(this.received) || 0, reference: this.reference || null, payment_account_id: this.account || null, idempotency_key: this.payKey });
         this.change = r.change; this.paid = true;
       } catch (e) { this.payError = e.message; }
       this.paying = false;

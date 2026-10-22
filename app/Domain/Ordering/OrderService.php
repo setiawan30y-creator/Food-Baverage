@@ -200,13 +200,13 @@ class OrderService
     }
 
     /** Pembayaran dikonfirmasi oleh kasir (tunai atau non-tunai yang sudah diverifikasi). */
-    public function pay(Order $order, string $method, float $received, ?string $reference, ?CashierShift $shift, ?string $idempotencyKey = null): Payment
+    public function pay(Order $order, string $method, float $received, ?string $reference, ?CashierShift $shift, ?string $idempotencyKey = null, ?int $accountId = null): Payment
     {
         if ($idempotencyKey && ($existing = Payment::where('idempotency_key', $idempotencyKey)->first())) {
             return $existing;
         }
 
-        return DB::transaction(function () use ($order, $method, $received, $reference, $shift, $idempotencyKey) {
+        return DB::transaction(function () use ($order, $method, $received, $reference, $shift, $idempotencyKey, $accountId) {
             $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
             if ($order->payment_status === 'paid') {
                 throw new \DomainException('Pesanan sudah lunas.');
@@ -221,6 +221,8 @@ class OrderService
             if ($method !== 'cash') {
                 $received = $total;
             }
+            // Rekening tujuan (bank/QRIS/e-wallet/kas) agar saldo per akun tercatat
+            $accountId = app(\App\Domain\Finance\AccountService::class)->resolveForPayment((int) $order->branch_id, $method, $accountId);
 
             $payment = Payment::create([
                 'tenant_id' => $order->tenant_id,
@@ -228,6 +230,7 @@ class OrderService
                 'order_id' => $order->id,
                 'cashier_shift_id' => $shift?->id,
                 'method' => $method,
+                'payment_account_id' => $accountId,
                 'amount' => $total,
                 'received' => $received,
                 'change' => max(0, $received - $total),

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0 — 2026-10-22
+- Keuangan → **Saldo Kas & Rekening** (`/keuangan/rekening`): rekening bank, QRIS, e-wallet & kas dengan saldo awal, penjualan masuk per rekening, mutasi manual (biaya admin, penarikan, setoran, koreksi), pindah dana antar rekening, mutasi dengan saldo berjalan, ekspor CSV.
+- Pembayaran pesanan otomatis masuk ke rekening metode tersebut; bila satu metode punya beberapa rekening, kasir memilih rekening tujuan.
+- **Riwayat Penjualan** (`/riwayat-penjualan`): pembayaran lunas per tanggal, metode & rekening, ringkasan & ekspor CSV.
+- Menu **Saldo Awal Stok** di navigasi.
+- Tombol tampilkan/sembunyikan kata sandi; CSS/JS kini selalu termuat versi terbaru (cache-busting otomatis).
+- Migrasi baru: php artisan migrate. @2026-Alifiandra
+
 ## 1.2.0 — 2026-10-22
 - SaaS: paket Basic/Pro/Enterprise dengan modul & batas; menu di luar paket tersembunyi & terkunci di server.
 - Panel Super Admin `/admin`: dasbor platform, kelola penyewa, tagihan & verifikasi bukti bayar, pengaturan platform, "Masuk sebagai" pemilik (teraudit).

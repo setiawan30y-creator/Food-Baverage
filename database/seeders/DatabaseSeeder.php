@@ -102,6 +102,11 @@ class DatabaseSeeder extends Seeder
         }
 
         // Akun Super Admin platform (pemilik SaaS) — tidak terikat usaha mana pun
+        // Rekening contoh (ubah nama, nomor & saldo awal di Keuangan → Saldo Kas & Rekening)
+        foreach ([['Kas Tunai', 'cash'], ['Rekening Bank', 'transfer'], ['QRIS', 'qris'], ['E-wallet', 'ewallet']] as [$accName, $accMethod]) {
+            \App\Models\PaymentAccount::create(['name' => $accName, 'method' => $accMethod, 'opening_balance' => 0, 'opening_date' => today(), 'is_active' => true]);
+        }
+
         User::create(['tenant_id' => null, 'branch_id' => null, 'name' => 'Super Admin', 'email' => 'superadmin@contoh.test', 'role' => 'superadmin', 'password' => 'password', 'is_active' => true]);
 
         // Katalog contoh: menu snack (kentang crispy, kentang spiral, corndog, dll.)

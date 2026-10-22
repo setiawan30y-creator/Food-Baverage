@@ -55,6 +55,10 @@ class TableLayoutTest extends TestCase
         $this->actingAs($cashier)->postJson('/pos/orders', ['type' => 'takeaway', 'idempotency_key' => 'b', 'items' => [['menu_id' => $menu->id, 'qty' => 1]]]);
         $this->actingAs($cashier)->postJson("/orders/{$o1['id']}/pay", ['method' => 'cash', 'received' => 50000]);
         $this->actingAs($cashier)->post('/cashier/movements', ['type' => 'expense', 'amount' => 3000, 'note' => 'Beli es batu']);
+        $kas = $this->first(\App\Models\PaymentAccount::class, ['method' => 'cash']);
+        $bank = $this->first(\App\Models\PaymentAccount::class, ['method' => 'transfer']);
+        $this->actingAs($this->u('owner@contoh.test'))->post('/keuangan/pindah-dana', ['from_id' => $kas->id, 'to_id' => $bank->id, 'amount' => 10000, 'date' => today()->toDateString()]);
+        $this->actingAs($this->u('owner@contoh.test'))->post("/keuangan/rekening/{$bank->id}/mutasi", ['direction' => 'out', 'category' => 'fee', 'amount' => 2500, 'date' => today()->toDateString(), 'note' => 'Biaya admin']);
 
         $table = $this->first(DiningTable::class);
         tenancy()->clear();
@@ -100,6 +104,9 @@ class TableLayoutTest extends TestCase
             '/employees', '/schedule', '/attendance', '/leaves', '/payroll', '/payroll/'.$id(PayrollRun::class), '/my/payslips',
             "/reports/sales?from={$from}&to={$to}", "/reports/menu?from={$from}&to={$to}", "/reports/stock?from={$from}&to={$to}", "/reports/waste?from={$from}&to={$to}",
             '/audit', '/settings/users', '/langganan',
+            "/riwayat-penjualan?from={$from}&to={$to}", "/keuangan/rekening?from={$from}&to={$to}",
+            '/keuangan/rekening/'.$id(\App\Models\PaymentAccount::class, ['method' => 'transfer'])."?from={$from}&to={$to}",
+            '/keuangan/rekening/'.$id(\App\Models\PaymentAccount::class, ['method' => 'cash'])."?from={$from}&to={$to}",
         ];
 
         $checkedTables = 0;

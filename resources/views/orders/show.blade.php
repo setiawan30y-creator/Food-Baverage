@@ -67,6 +67,15 @@
           <div class="field"><label>Metode</label><select name="method" x-model="m">@foreach(config('fnb.payment_methods') as $k => $l)<option value="{{ $k }}">{{ $l }}</option>@endforeach</select></div>
           <div class="field" x-show="m==='cash'"><label>Uang diterima</label><input type="number" name="received" value="{{ (int) $order->total }}" min="0"></div>
           <div class="field" x-show="m!=='cash'"><label>No. referensi (sudah diverifikasi)</label><input type="text" name="reference"></div>
+          @php $accOptions = app(\App\Domain\Finance\AccountService::class)->optionsFor((int) $order->branch_id); @endphp
+          @foreach($accOptions as $method => $list)
+            <div class="field" x-show="m==='{{ $method }}'"><label>Masuk ke rekening</label>
+              <select name="payment_account_id" :disabled="m!=='{{ $method }}'" @if($method !== 'cash') disabled @endif>
+                @if($list->count() > 1)<option value="">— pilih rekening tujuan —</option>@endif
+                @foreach($list as $a)<option value="{{ $a['id'] }}">{{ $a['label'] }}</option>@endforeach
+              </select>
+            </div>
+          @endforeach
           <button class="btn btn-accent btn-block">Terima pembayaran {{ rupiah($order->total) }}</button>
         </form>
       @endif
@@ -92,7 +101,7 @@
       @forelse($order->payments as $p)
         <div style="padding:10px 18px;border-bottom:1px solid var(--border)">
           <div class="row between"><b>{{ \App\Models\Payment::METHODS[$p->method] ?? $p->method }}</b>{!! status_badge($p->status) !!}</div>
-          <small>{{ rupiah($p->amount) }} · diterima {{ rupiah($p->received) }} · kembali {{ rupiah($p->change) }}{{ $p->reference ? ' · ref '.$p->reference : '' }}<br>{{ $p->paid_at?->format('d/m H:i') }} · {{ $p->user?->name }}</small>
+          <small>{{ rupiah($p->amount) }} · diterima {{ rupiah($p->received) }} · kembali {{ rupiah($p->change) }}{{ $p->reference ? ' · ref '.$p->reference : '' }}{{ $p->account ? ' · ke '.$p->account->name : '' }}<br>{{ $p->paid_at?->format('d/m H:i') }} · {{ $p->user?->name }}</small>
         </div>
       @empty <div class="empty">Belum ada pembayaran.</div>
       @endforelse

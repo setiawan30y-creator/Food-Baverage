@@ -27,6 +27,7 @@ Aplikasi SaaS multi-tenant untuk warung makan & usaha makanan/minuman, dibangun 
 | Izin & lembur | Izin, sakit, cuti, lembur dengan persetujuan |
 | Payroll | Bulanan, harian, per shift, per jam, komisi, borongan; tunjangan, lembur disetujui, bonus/THR, potongan (BPJS/PPh21 diisi sesuai aturan berlaku — tidak di-hardcode), cicilan kasbon, kunci setelah disetujui, slip privat |
 | Laporan | Penjualan harian, kanal, kasir, cabang (konsolidasi), rekonsiliasi pembayaran, menu & margin, pemakaian & kebocoran stok, waste — ekspor CSV |
+| Keuangan | Saldo Kas & Rekening (bank, QRIS, e-wallet, kas): saldo awal, penjualan masuk per rekening, mutasi & pindah dana; Riwayat Penjualan per metode/rekening |
 | Audit | Log tindakan sensitif (diskon, void, refund, closing, stok, harga, payroll, dll.) |
 | PWA | Manifest + service worker (hanya aset statis; transaksi selalu lewat server), indikator offline |
 

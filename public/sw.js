@@ -4,7 +4,7 @@
  * - Halaman selalu diambil dari jaringan; bila offline tampil /offline.html.
  * - Transaksi (POST) tidak pernah di-cache: pesanan/pembayaran hanya sah bila server mengonfirmasi.
  */
-const CACHE = 'almara-static-v2';
+const CACHE = 'almara-static-v3';
 const ASSETS = ['/offline.html', '/css/app.css', '/js/app.js', '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/icon-maskable-512.png'];
 
 self.addEventListener('install', (e) => {

@@ -27,7 +27,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         $this->ensureBranch($order);
-        $order->load(['items', 'payments.user', 'histories.user', 'table', 'cashier']);
+        $order->load(['items', 'payments.user', 'payments.account', 'histories.user', 'table', 'cashier']);
 
         return view('orders.show', compact('order'));
     }
