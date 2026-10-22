@@ -1,0 +1,16 @@
+{
+  "name": "ALMARA Restaurant & Beverage OS",
+  "short_name": "ALMARA F&B",
+  "description": "Kasir, dapur, stok, resep/HPP, closing, karyawan & absensi untuk usaha makanan dan minuman.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FAF7F2",
+  "theme_color": "#C2410C",
+  "lang": "id",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
