@@ -60,6 +60,7 @@ Kentang (Crispy Original/Keju/Balado, Kentang Spiral, Spiral Keju Lumer), Corndo
 Camilan Lain (Chicken Popcorn, Sosis Bakar Jumbo, Churros), Paket Hemat, dan Minuman. Data ini juga mencakup pilihan tambahan
 (ukuran, saus, bumbu, level pedas, gula), 31 bahan baku dengan konversi kemasan, 5 racikan (adonan corndog, saus keju, bumbu tabur keju,
 gula kayu manis, adonan churros) beserta batch produksinya, resep tiap menu, dan HPP/margin.
+Setiap menu juga diberi ilustrasi foto (`database/seeders/images/menus`, dibuat dengan `tools/menu-art`); foto hanya dipasang pada menu yang belum punya foto.
 
 Untuk menambahkan menu snack ke database yang sudah berisi data (tanpa menghapus data; aman dijalankan ulang):
 

@@ -300,6 +300,11 @@ class AppFlowTest extends TestCase
         $this->assertSame($before, $counts());
         $this->assertSame(17, $before[0]);
 
+        $menus = Menu::withoutGlobalScopes()->get();
+        $this->assertTrue($menus->every(fn ($m) => $m->photo_path !== null), 'Semua menu contoh punya foto');
+        $photo = $menus->firstWhere('name', 'Corndog Mozzarella');
+        $this->get('/media/menu/'.$photo->id)->assertOk()->assertHeader('Content-Type', 'image/webp');
+
         $this->actingAs($this->user('kasir@contoh.test'))->get('/pos')->assertOk()
             ->assertSee('Kentang Crispy Original')->assertSee('Kentang Spiral')->assertSee('Corndog Mozzarella')->assertSee('Paket Hemat Snack');
     }

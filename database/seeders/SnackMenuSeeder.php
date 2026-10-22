@@ -15,12 +15,14 @@ use App\Models\StockMovement;
 use App\Models\Supplier;
 use App\Models\Tenant;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Data contoh POS menu snack: kentang crispy, kentang spiral, corndog,
  * chicken popcorn, churros, sosis bakar, paket hemat, dan minuman —
  * lengkap dengan bahan, konversi kemasan, sub-recipe (racikan), resep, HPP,
- * dan stok awal.
+ * stok awal, dan ilustrasi foto tiap menu (database/seeders/images/menus).
  *
  * Aman dijalankan ulang (tidak menggandakan data):
  *   php artisan db:seed --class=SnackMenuSeeder
@@ -206,7 +208,20 @@ class SnackMenuSeeder extends Seeder
             if (! Recipe::where('type', 'menu')->where('menu_id', $menu->id)->where('is_active', true)->exists()) {
                 $this->recipe('menu', $name, 1, $bom, menu: $menu);
             }
+            $this->attachPhoto($menu);
         }
+    }
+
+    /** Pasang ilustrasi contoh (database/seeders/images/menus/<slug>.webp) bila menu belum punya foto. */
+    protected function attachPhoto(Menu $menu): void
+    {
+        $source = database_path('seeders/images/menus/'.Str::slug($menu->name).'.webp');
+        if ($menu->photo_path || ! is_file($source)) {
+            return;
+        }
+        $path = 'tenants/'.$menu->tenant_id.'/menus/contoh-'.Str::slug($menu->name).'.webp';
+        Storage::disk('local')->put($path, file_get_contents($source));
+        $menu->update(['photo_path' => $path]);
     }
 
     /** Stok awal racikan dibuat lewat batch produksi agar HPP & susut tercatat. */
