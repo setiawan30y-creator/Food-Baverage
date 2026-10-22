@@ -69,3 +69,39 @@ window.api = async function (url, data, method) {
     if (ios && !standalone && !dismissed) toggle('[data-pwa-ios]', true);
   });
 })();
+
+/* ---------- Tombol tampilkan/sembunyikan kata sandi (otomatis di semua kolom kata sandi) — @2026-Alifiandra ---------- */
+(function () {
+  var eye = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var eyeOff = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  function enhance(input) {
+    if (input.dataset.pwToggle) return;
+    input.dataset.pwToggle = '1';
+    var wrap = document.createElement('div');
+    wrap.className = 'pw-wrap';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pw-toggle';
+    btn.setAttribute('aria-label', 'Tampilkan kata sandi');
+    btn.title = 'Tampilkan kata sandi';
+    btn.innerHTML = eye;
+    btn.addEventListener('click', function () {
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.innerHTML = show ? eyeOff : eye;
+      var label = show ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi';
+      btn.setAttribute('aria-label', label);
+      btn.title = label;
+      btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+      input.focus();
+    });
+    wrap.appendChild(btn);
+    // kembalikan ke tersembunyi sebelum formulir dikirim (agar tidak tersimpan sebagai teks oleh browser)
+    if (input.form) input.form.addEventListener('submit', function () { input.type = 'password'; });
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('input[type=password]').forEach(enhance);
+  });
+})();

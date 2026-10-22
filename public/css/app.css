@@ -256,3 +256,10 @@ details.disclose summary::-webkit-details-marker { display: none; }
   .card { box-shadow: none; border-color: #ccc; }
   .content { padding: 0; max-width: none; }
 }
+
+/* Tampilkan/sembunyikan kata sandi — @2026-Alifiandra */
+.pw-wrap { position: relative; display: block; }
+.pw-wrap input { width: 100%; padding-right: 44px; }
+.pw-toggle { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); width: 36px; height: 32px; display: grid; place-items: center; border: 0; background: transparent; color: var(--muted, #78716c); border-radius: var(--radius-sm, 6px); cursor: pointer; }
+.pw-toggle:hover { color: var(--text); background: color-mix(in srgb, var(--primary) 10%, transparent); }
+.pw-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
