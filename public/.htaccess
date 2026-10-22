@@ -18,6 +18,9 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
+    # Manifest PWA selalu dinamis (per usaha), walau ada file lama manifest.webmanifest — @2026-Alifiandra
+    RewriteRule ^manifest\.webmanifest$ index.php [L]
+
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
