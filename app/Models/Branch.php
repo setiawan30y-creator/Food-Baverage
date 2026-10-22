@@ -16,7 +16,7 @@ class Branch extends Model
     protected function casts(): array
     {
         return [
-            'order_ahead_enabled' => 'boolean', 'weather_widget' => 'boolean', 'is_active' => 'boolean',
+            'order_ahead_enabled' => 'boolean', 'weather_widget' => 'boolean', 'is_active' => 'boolean', 'block_out_of_stock' => 'boolean',
             'tax_percent' => 'decimal:2', 'service_percent' => 'decimal:2',
         ];
     }

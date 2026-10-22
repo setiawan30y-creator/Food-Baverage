@@ -27,6 +27,8 @@
         <button type="button" class="menu-tile" :class="{soldout: m.sold_out}" @click="pick(m)" :disabled="m.sold_out">
           <template x-if="m.photo"><img :src="m.photo" :alt="m.name" loading="lazy"></template>
           <template x-if="!m.photo"><div class="ph" x-text="m.name.charAt(0)"></div></template>
+          <span class="stock-badge" x-show="m.stock !== null" :class="{ low: m.stock > 0 && m.stock <= 5, out: m.stock <= 0 }" x-text="m.stock <= 0 ? 'Stok 0' : 'Sisa ' + m.stock"></span>
+          <span class="soldout-label" x-show="m.sold_out">HABIS</span>
           <div class="body"><b x-text="m.name"></b><span x-text="m.sold_out ? 'Habis' : rupiah(m.price)"></span></div>
         </button>
       </template>
@@ -58,7 +60,7 @@
             <input type="text" class="input-sm" x-model="l.note" placeholder="Catatan item" style="margin-top:4px;font-size:12px">
           </div>
           <div style="text-align:right">
-            <div class="qty"><button type="button" @click="dec(i)" aria-label="Kurangi">−</button><span x-text="l.qty"></span><button type="button" @click="l.qty++" aria-label="Tambah">+</button></div>
+            <div class="qty"><button type="button" @click="dec(i)" aria-label="Kurangi">−</button><span x-text="l.qty"></span><button type="button" @click="canAdd(menus.find(m => m.id === l.menu_id)) && l.qty++" aria-label="Tambah">+</button></div>
             <div class="mono" style="margin-top:6px;font-weight:700" x-text="rupiah(lineTotal(l))"></div>
           </div>
         </div>
@@ -159,7 +161,7 @@
 function pos() {
   return {
     menus: @js($menus), categories: @js($categories),
-    taxPct: {{ (float) $branch->tax_percent }}, servicePct: {{ (float) $branch->service_percent }},
+    taxPct: {{ (float) $branch->tax_percent }}, servicePct: {{ (float) $branch->service_percent }}, block: @js((bool) $branch->block_out_of_stock),
     q: '', cat: null, type: 'dine_in', table: '', cart: [], customer_name: '', customer_phone: '', discount: 0, discount_reason: '', note: '',
     idem: uuid(), busy: false, error: '', modMenu: null, modSel: [],
     payOrder: null, method: 'cash', received: 0, reference: '', paying: false, paid: false, change: 0, payError: '', payKey: null,
@@ -172,7 +174,21 @@ function pos() {
     get quick() { const t = this.payOrder ? this.payOrder.total : 0; return [10000, 20000, 50000, 100000].map(n => Math.ceil(t / n) * n).filter((v, i, a) => v > t && a.indexOf(v) === i).slice(0, 3); },
     lineTotal(l) { return (l.price + l.mods.reduce((s, m) => s + m.price, 0)) * l.qty; },
     groups(m) { return m.modifiers.reduce((g, o) => { (g[o.group] = g[o.group] || []).push(o); return g; }, {}); },
-    pick(m) { if (m.sold_out) return; if (m.modifiers.length) { this.modMenu = m; this.modSel = []; } else { this.add(m, []); } },
+    init() { setInterval(() => this.refreshStock(), 30000); },
+    inCart(id) { return this.cart.filter(l => l.menu_id === id).reduce((s, l) => s + l.qty, 0); },
+    canAdd(m) {
+      if (this.block && m.stock !== null && this.inCart(m.id) >= m.stock) { this.error = 'Stok ' + m.name + ' tinggal ' + Math.max(0, m.stock) + ' porsi.'; return false; }
+      this.error = ''; return true;
+    },
+    async refreshStock() {
+      try {
+        const r = await fetch(@js(route('pos.stock')), { headers: { Accept: 'application/json' } });
+        if (!r.ok) return;
+        const s = await r.json();
+        this.menus.forEach(m => { if (s[m.id]) { m.stock = s[m.id].stock; m.sold_out = s[m.id].sold_out; } });
+      } catch (e) {}
+    },
+    pick(m) { if (m.sold_out || !this.canAdd(m)) return; if (m.modifiers.length) { this.modMenu = m; this.modSel = []; } else { this.add(m, []); } },
     add(m, ids) {
       const mods = m.modifiers.filter(o => ids.includes(o.id));
       const key = m.id + ':' + ids.slice().sort().join(',');
@@ -191,8 +207,9 @@ function pos() {
           items: this.cart.map(l => ({ menu_id: l.menu_id, qty: l.qty, modifier_ids: l.mods.map(m => m.id), note: l.note || null })),
         });
         this.reset();
+        this.refreshStock();
         if (payNow) this.openPay(o); else alert('Pesanan ' + o.number + ' terkirim ke dapur.');
-      } catch (e) { this.error = e.message; }
+      } catch (e) { this.error = e.message; this.refreshStock(); }
       this.busy = false;
     },
     openPay(o) { this.payOrder = o; this.method = 'cash'; this.received = o.total; this.reference = ''; this.paid = false; this.payError = ''; this.payKey = uuid(); },

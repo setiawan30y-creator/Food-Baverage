@@ -2,7 +2,7 @@
 @section('title', 'Menu')
 @section('content')
 <div class="page-head">
-  <div><h1>Menu</h1><p>Harga & ketersediaan di bawah berlaku untuk cabang <b>{{ $currentBranch->name }}</b>.</p></div>
+  <div><h1>Menu</h1><p>Harga, sisa porsi & ketersediaan berlaku untuk cabang <b>{{ $currentBranch->name }}</b>. Sisa porsi dihitung otomatis dari stok bahan × resep{{ $block ? '; menu otomatis terkunci saat habis' : ' (penguncian menu saat habis sedang dimatikan di pengaturan cabang)' }}. Isi <i>Stok harian</i> bila menu dibatasi sekian porsi per hari.</p></div>
   <a href="{{ route('menus.create') }}" class="btn btn-primary"><x-icon name="plus" style="width:16px;height:16px"/> Menu baru</a>
 </div>
 <div class="grid g-side">
@@ -14,7 +14,7 @@
     </form>
     <div class="card table-wrap">
       <table class="table">
-        <thead><tr><th>Menu</th><th class="num">Harga cabang</th><th class="num">HPP</th><th class="num">Margin</th><th>Tersedia</th><th>Habis</th></tr></thead>
+        <thead><tr><th>Menu</th><th class="num">Harga cabang</th><th class="num">HPP</th><th class="num">Margin</th><th>Sisa porsi</th><th>Stok harian</th><th>Tersedia</th><th>Habis</th></tr></thead>
         <tbody>
         @forelse($menus as $m)
           @php $s = $settings->get($m->id); $price = (float) ($s?->price ?? $m->price); $cost = $costs[$m->id]; @endphp
@@ -24,10 +24,17 @@
             <td class="num">{{ rupiah($price) }}@if($s?->price !== null)<br><small>dasar {{ rupiah($m->price) }}</small>@endif</td>
             <td class="num">{{ $cost > 0 ? rupiah($cost) : '—' }}</td>
             <td class="num">@if($cost > 0 && $price > 0)<span class="badge {{ ($price - $cost) / $price < .4 ? 'badge-warn' : 'badge-ok' }}">{{ number_format(($price - $cost) / $price * 100, 0) }}%</span>@else — @endif</td>
+            @php $st = $stock[$m->id]; @endphp
+            <td>@if($st['stock'] === null)<span class="muted" title="Belum ada resep / stok harian">—</span>
+              @else<span class="badge {{ $st['stock'] <= 0 ? 'badge-danger' : ($st['stock'] <= 5 ? 'badge-warn' : 'badge-ok') }}">{{ $st['stock'] <= 0 ? 'Habis' : $st['stock'] }}</span>
+                @if($st['limit_by'])<br><small title="Pembatas sisa porsi">{{ $st['limit_by'] }}</small>@endif
+              @endif</td>
+            <td><input type="number" min="0" class="input-sm" style="width:84px" placeholder="—" value="{{ $s?->daily_stock }}" aria-label="Stok porsi harian {{ $m->name }}"
+              @change="api('{{ route('menus.branch', $m) }}', { daily_stock: $event.target.value === '' ? null : Number($event.target.value) }).then(() => location.reload()).catch(e => alert(e.message))"></td>
             <td><label class="check"><input type="checkbox" x-model="avail" @change="api('{{ route('menus.branch', $m) }}', { is_available: avail }).catch(e => { alert(e.message); avail = !avail })"></label></td>
             <td><label class="check"><input type="checkbox" x-model="sold" @change="api('{{ route('menus.branch', $m) }}', { sold_out: sold }).catch(e => { alert(e.message); sold = !sold })"></label></td>
           </tr>
-        @empty <tr><td colspan="6" class="empty">Belum ada menu.</td></tr>
+        @empty <tr><td colspan="8" class="empty">Belum ada menu.</td></tr>
         @endforelse
         </tbody>
       </table>

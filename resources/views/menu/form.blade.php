@@ -55,12 +55,13 @@
       </div>
     </div>
     <div class="card">
-      <div class="card-head"><h3>Harga khusus cabang ini</h3></div>
+      <div class="card-head"><h3>Harga & stok harian cabang ini</h3></div>
       <form method="POST" action="{{ route('menus.branch', $menu) }}" class="card-pad row">
         @csrf
         @php $bm = \App\Models\BranchMenu::where('branch_id', $currentBranch->id)->where('menu_id', $menu->id)->first(); @endphp
-        <input type="number" name="price" value="{{ $bm?->price !== null ? (int) $bm->price : '' }}" placeholder="Kosong = harga dasar" style="flex:1" min="0">
-        <button class="btn btn-sm">Simpan</button>
+        <div style="flex:1;min-width:140px"><label>Harga cabang</label><input type="number" name="price" value="{{ $bm?->price !== null ? (int) $bm->price : '' }}" placeholder="Kosong = harga dasar" min="0"></div>
+        <div style="flex:1;min-width:140px"><label>Stok porsi harian</label><input type="number" name="daily_stock" value="{{ $bm?->daily_stock }}" placeholder="Kosong = tanpa batas" min="0"></div>
+        <button class="btn btn-sm" style="align-self:flex-end">Simpan</button>
       </form>
     </div>
     @if(!empty($history) && $history->count())

@@ -22,6 +22,7 @@
 <div class="row" style="margin-bottom:14px">
   <label class="check"><input type="checkbox" name="order_ahead_enabled" value="1" @checked($b->order_ahead_enabled)> Order Ahead aktif</label>
   <label class="check"><input type="checkbox" name="weather_widget" value="1" @checked($b->weather_widget)> Widget cuaca</label>
+  <label class="check" title="Menu otomatis tidak bisa dipesan bila bahan menurut resep / stok harian habis"><input type="checkbox" name="block_out_of_stock" value="1" @checked($b->block_out_of_stock ?? true)> Kunci menu saat stok habis</label>
   <label class="check"><input type="checkbox" name="is_active" value="1" @checked($b->is_active)> Cabang aktif</label>
 </div>
 </div>

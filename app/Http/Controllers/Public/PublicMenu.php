@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Domain\Catalog\MenuStockService;
 use App\Models\Branch;
 use App\Models\BranchMenu;
 use App\Models\Menu;
@@ -26,14 +27,17 @@ trait PublicMenu
         $settings = BranchMenu::where('branch_id', $branch->id)->get()->keyBy('menu_id');
         $menus = Menu::with(['modifiers' => fn ($q) => $q->where('is_active', true)])
             ->where('is_active', true)->orderBy('name')->get()
-            ->filter(fn ($m) => (! ($s = $settings->get($m->id)) || $s->is_available))
+            ->filter(fn ($m) => (! ($s = $settings->get($m->id)) || $s->is_available));
+        $stock = app(MenuStockService::class)->forBranch($branch, $menus);
+        $menus = $menus
             ->map(fn ($m) => [
                 'id' => $m->id,
                 'name' => $m->name,
                 'description' => $m->description,
                 'category' => $m->menu_category_id,
                 'price' => (float) ($settings->get($m->id)?->price ?? $m->price),
-                'sold_out' => (bool) ($settings->get($m->id)?->sold_out) || ! $m->isScheduledAt(now()),
+                'stock' => $stock[$m->id]['stock'],
+                'sold_out' => (bool) ($settings->get($m->id)?->sold_out) || ! $m->isScheduledAt(now()) || ($branch->block_out_of_stock && $stock[$m->id]['stock'] !== null && $stock[$m->id]['stock'] <= 0),
                 'photo' => $m->photoUrl(),
                 'modifiers' => $m->modifiers->map(fn ($x) => ['id' => $x->id, 'group' => $x->group_name, 'name' => $x->name, 'price' => (float) $x->price])->values(),
             ])->values();

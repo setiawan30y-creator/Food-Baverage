@@ -15,10 +15,11 @@
       <template x-for="c in categories" :key="c.id"><button class="chip" :class="{active: cat===c.id}" @click="cat=c.id" x-text="c.name"></button></template>
     </div>
     <template x-for="m in filtered" :key="m.id">
-      <div class="list-item" :style="m.sold_out ? 'opacity:.5' : ''">
+      <div class="list-item" :class="{ soldout: m.sold_out }">
         <template x-if="m.photo"><img :src="m.photo" :alt="m.name" loading="lazy"></template>
         <template x-if="!m.photo"><div class="ph" x-text="m.name.charAt(0)"></div></template>
         <div style="flex:1;min-width:0"><b x-text="m.name"></b><p class="muted" style="font-size:13px;margin:2px 0" x-text="m.description || ''"></p>
+          <small x-show="!m.sold_out && m.stock !== null && m.stock <= 5" style="color:var(--warn);font-weight:700" x-text="'Tinggal ' + m.stock + ' porsi'"></small>
           <div class="row between"><b style="color:var(--primary)" x-text="rupiah(m.price)"></b>
             <button class="btn btn-sm btn-primary" @click="pick(m)" :disabled="m.sold_out" x-text="m.sold_out ? 'Habis' : (count(m.id) ? 'Tambah (' + count(m.id) + ')' : 'Tambah')"></button></div></div>
       </div>
@@ -88,7 +89,12 @@ function shop() {
     line(l) { return (l.price + l.mods.reduce((s, m) => s + m.price, 0)) * l.qty; },
     count(id) { return this.cart.filter(l => l.menu_id === id).reduce((s, l) => s + l.qty, 0); },
     groups(m) { return m.modifiers.reduce((g, o) => { (g[o.group] = g[o.group] || []).push(o); return g; }, {}); },
-    pick(m) { if (m.modifiers.length) { this.modMenu = m; this.sel = []; } else this.add(m, []); },
+    pick(m) {
+      if (m.sold_out) return;
+      if (m.stock !== null && this.count(m.id) >= m.stock) { this.error = 'Stok ' + m.name + ' tinggal ' + m.stock + ' porsi.'; return; }
+      this.error = '';
+      if (m.modifiers.length) { this.modMenu = m; this.sel = []; } else this.add(m, []);
+    },
     add(m, ids) { this.cart.push({ key: m.id + '-' + Date.now(), menu_id: m.id, name: m.name, price: m.price, qty: 1, mods: m.modifiers.filter(o => ids.includes(o.id)), note: '' }); },
     dec(i) { if (this.cart[i].qty > 1) this.cart[i].qty--; else { this.cart.splice(i, 1); if (!this.cart.length) this.step = 'menu'; } },
     async send() {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Catalog\MenuStockService;
 use App\Domain\Ordering\OrderService;
 use App\Domain\Shared\Audit;
 use App\Models\BranchMenu;
@@ -17,18 +18,22 @@ use Illuminate\Validation\Rule;
 /** Kasir / POS: dine-in, takeaway, pembayaran. @2026-Alifiandra */
 class PosController extends Controller
 {
-    public function index()
+    public function index(MenuStockService $menuStock)
     {
         $settings = BranchMenu::where('branch_id', $this->branchId())->get()->keyBy('menu_id');
         $menus = Menu::with(['modifiers' => fn ($q) => $q->where('is_active', true)])
             ->where('is_active', true)->orderBy('name')->get()
-            ->filter(fn ($m) => ! ($s = $settings->get($m->id)) || $s->is_available)
+            ->filter(fn ($m) => ! ($s = $settings->get($m->id)) || $s->is_available);
+        $stock = $menuStock->forBranch($this->branch(), $menus);
+        $block = $this->branch()->block_out_of_stock;
+        $menus = $menus
             ->map(fn ($m) => [
                 'id' => $m->id,
                 'name' => $m->name,
                 'category' => $m->menu_category_id,
                 'price' => (float) ($settings->get($m->id)?->price ?? $m->price),
-                'sold_out' => (bool) ($settings->get($m->id)?->sold_out) || ! $m->isScheduledAt(now()),
+                'stock' => $stock[$m->id]['stock'],
+                'sold_out' => (bool) ($settings->get($m->id)?->sold_out) || ! $m->isScheduledAt(now()) || ($block && $stock[$m->id]['stock'] !== null && $stock[$m->id]['stock'] <= 0),
                 'photo' => $m->photoUrl(),
                 'modifiers' => $m->modifiers->map(fn ($x) => ['id' => $x->id, 'group' => $x->group_name, 'name' => $x->name, 'price' => (float) $x->price])->values(),
             ])->values();
@@ -42,6 +47,21 @@ class PosController extends Controller
                 ->with('table')->latest()->limit(30)->get(),
             'branch' => $this->branch(),
         ]);
+    }
+
+    /** Sisa porsi terbaru untuk layar kasir (dipanggil berkala & setelah transaksi). */
+    public function stock(MenuStockService $menuStock)
+    {
+        $branch = $this->branch();
+        $settings = BranchMenu::where('branch_id', $branch->id)->get()->keyBy('menu_id');
+        $menus = Menu::where('is_active', true)->get();
+        $stock = $menuStock->forBranch($branch, $menus);
+
+        return response()->json($menus->mapWithKeys(fn ($m) => [$m->id => [
+            'stock' => $stock[$m->id]['stock'],
+            'sold_out' => (bool) ($settings->get($m->id)?->sold_out) || ! $m->isScheduledAt(now())
+                || ($branch->block_out_of_stock && $stock[$m->id]['stock'] !== null && $stock[$m->id]['stock'] <= 0),
+        ]]));
     }
 
     public function store(Request $request, OrderService $orders)

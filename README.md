@@ -54,6 +54,13 @@ php artisan serve
 Buka `http://127.0.0.1:8000` (atau `http://food-baverage.test` lewat Laragon).
 Tidak perlu `npm run build` — CSS/JS sudah siap di `public/`.
 
+### Sisa porsi & menu habis
+Sisa porsi tiap menu dihitung otomatis dari **stok bahan × resep** cabang aktif, dikurangi bahan untuk pesanan yang belum dibayar.
+Menu yang habis otomatis gelap dan tidak bisa dipesan, baik di kasir maupun di menu pelanggan; server juga menolak pesanan yang melebihi stok.
+Isi **Stok harian** di halaman Menu bila menu dibatasi sekian porsi per hari. Penguncian bisa dimatikan per cabang
+(Pengaturan → Cabang → *Kunci menu saat stok habis*), misalnya bila pencatatan stok bahan belum rapi.
+Menu tanpa resep tidak dilacak dan selalu tersedia.
+
 ### Data contoh: kedai snack
 `php artisan migrate --seed` mengisi contoh **Kedai Snack Contoh** dengan 17 menu dalam 5 kategori:
 Kentang (Crispy Original/Keju/Balado, Kentang Spiral, Spiral Keju Lumer), Corndog (Sosis, Mozzarella, Mix, Kentang),

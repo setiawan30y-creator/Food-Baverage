@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Catalog\MenuStockService;
 use App\Domain\Production\CostingService;
 use App\Domain\Shared\Audit;
 use App\Models\BranchMenu;
@@ -17,7 +18,7 @@ use Illuminate\Validation\Rule;
 /** Menu, kategori, modifier, harga & ketersediaan per cabang. @2026-Alifiandra */
 class MenuController extends Controller
 {
-    public function index(Request $request, CostingService $costing)
+    public function index(Request $request, CostingService $costing, MenuStockService $menuStock)
     {
         $categories = MenuCategory::orderBy('sort')->orderBy('name')->get();
         $menus = Menu::with(['category', 'recipe'])
@@ -26,8 +27,10 @@ class MenuController extends Controller
             ->orderBy('name')->get();
         $settings = BranchMenu::where('branch_id', $this->branchId())->get()->keyBy('menu_id');
         $costs = $menus->mapWithKeys(fn ($m) => [$m->id => $costing->menuUnitCost($m)]);
+        $stock = $menuStock->forBranch($this->branch(), $menus);
+        $block = $this->branch()->block_out_of_stock;
 
-        return view('menu.index', compact('categories', 'menus', 'settings', 'costs'));
+        return view('menu.index', compact('categories', 'menus', 'settings', 'costs', 'stock', 'block'));
     }
 
     public function create()
@@ -74,6 +77,7 @@ class MenuController extends Controller
             'price' => ['nullable', 'numeric', 'min:0'],
             'is_available' => ['nullable', 'boolean'],
             'sold_out' => ['nullable', 'boolean'],
+            'daily_stock' => ['nullable', 'integer', 'min:0', 'max:100000'],
         ]);
         $setting = BranchMenu::firstOrNew(['branch_id' => $this->branchId(), 'menu_id' => $menu->id]);
         if ($request->has('price')) {
@@ -89,6 +93,9 @@ class MenuController extends Controller
         }
         if ($request->has('sold_out')) {
             $setting->sold_out = (bool) $data['sold_out'];
+        }
+        if ($request->has('daily_stock')) {
+            $setting->daily_stock = $data['daily_stock'] ?? null;
         }
         $setting->save();
 

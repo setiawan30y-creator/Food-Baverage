@@ -7,7 +7,7 @@
 
 return [
     'product_name' => 'ALMARA Restaurant & Beverage OS',
-    'version' => '1.0.3',
+    'version' => '1.1.0',
     'signature' => '@2026-Alifiandra',
 
     /*

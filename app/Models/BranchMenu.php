@@ -16,6 +16,6 @@ class BranchMenu extends Model
 
     protected function casts(): array
     {
-        return ['is_available' => 'boolean', 'sold_out' => 'boolean'];
+        return ['is_available' => 'boolean', 'sold_out' => 'boolean', 'daily_stock' => 'integer'];
     }
 }

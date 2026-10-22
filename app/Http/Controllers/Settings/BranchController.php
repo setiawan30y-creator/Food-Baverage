@@ -77,6 +77,7 @@ class BranchController extends Controller
         $data['code'] = strtoupper($data['code']);
         $data['order_ahead_enabled'] = $request->boolean('order_ahead_enabled');
         $data['weather_widget'] = $request->boolean('weather_widget');
+        $data['block_out_of_stock'] = $request->boolean('block_out_of_stock');
         $data['is_active'] = $request->boolean('is_active', true);
 
         return $data;

@@ -62,7 +62,17 @@
     </div>
     @endif
     <div class="card">
-      <div class="card-head"><h3>Stok menipis</h3><a href="{{ route('inventory.stock') }}" class="btn btn-sm">Stok</a></div>
+      <div class="card-head"><h3>Menu hampir habis</h3><a href="{{ route('menus.index') }}" class="btn btn-sm">Menu</a></div>
+      @forelse($menuStock as $row)
+        <div style="padding:10px 18px;border-bottom:1px solid var(--border)" class="row between">
+          <span>{{ $row['menu']->name }}<br><small>{{ $row['limit_by'] }}</small></span>
+          <span class="badge {{ $row['stock'] <= 0 ? 'badge-danger' : 'badge-warn' }}">{{ $row['stock'] <= 0 ? 'Habis' : 'Sisa '.$row['stock'] }}</span>
+        </div>
+      @empty <div class="empty">Semua menu masih tersedia lebih dari 5 porsi.</div>
+      @endforelse
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Stok bahan menipis</h3><a href="{{ route('inventory.stock') }}" class="btn btn-sm">Stok</a></div>
       @forelse($lowStock as $row)
         <div style="padding:10px 18px;border-bottom:1px solid var(--border)" class="row between">
           <span>{{ $row['item']->name }}</span><span class="badge badge-danger">{{ qty($row['balance']) }} {{ $row['item']->base_unit }}</span>

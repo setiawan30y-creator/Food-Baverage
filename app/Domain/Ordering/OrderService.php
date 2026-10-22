@@ -2,6 +2,7 @@
 
 namespace App\Domain\Ordering;
 
+use App\Domain\Catalog\MenuStockService;
 use App\Domain\Inventory\InventoryService;
 use App\Domain\Production\CostingService;
 use App\Domain\Shared\Audit;
@@ -39,6 +40,7 @@ class OrderService
         protected SequenceService $sequence,
         protected CostingService $costing,
         protected InventoryService $inventory,
+        protected MenuStockService $menuStock,
     ) {}
 
     /**
@@ -161,6 +163,9 @@ class OrderService
                 'station_name' => $menu->station_name ?: 'Dapur',
             ];
         }
+
+        // Tolak bila bahan / stok harian tidak cukup (bisa dimatikan per cabang)
+        $this->menuStock->assertCartAvailable($branch, $lines);
 
         return $lines;
     }

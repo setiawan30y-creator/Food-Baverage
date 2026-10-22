@@ -42,6 +42,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     // POS & pesanan
     Route::middleware('ability:pos')->group(function () {
         Route::get('/pos', [Controllers\PosController::class, 'index'])->name('pos.index');
+        Route::get('/pos/stock', [Controllers\PosController::class, 'stock'])->name('pos.stock');
         Route::post('/pos/orders', [Controllers\PosController::class, 'store'])->name('pos.store');
         Route::post('/orders/{order}/pay', [Controllers\PosController::class, 'pay'])->name('orders.pay');
     });

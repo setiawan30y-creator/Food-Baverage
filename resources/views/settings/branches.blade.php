@@ -20,7 +20,7 @@
   </details>
 @endforeach
   <details class="card disclose"><summary class="card-head" style="display:flex"><b>+ Tambah cabang</b></summary>
-    <div class="card-pad"><form method="POST" action="{{ route('settings.branches.store') }}">@csrf {!! $fields(new \App\Models\Branch(['geofence_radius' => 100, 'open_time' => '08:00', 'close_time' => '21:00', 'tax_percent' => 0, 'service_percent' => 0, 'pickup_slot_minutes' => 15, 'pickup_capacity_per_slot' => 10, 'order_ahead_enabled' => true, 'weather_widget' => true, 'is_active' => true])) !!}<button class="btn btn-primary">Tambah cabang</button></form></div>
+    <div class="card-pad"><form method="POST" action="{{ route('settings.branches.store') }}">@csrf {!! $fields(new \App\Models\Branch(['geofence_radius' => 100, 'open_time' => '08:00', 'close_time' => '21:00', 'tax_percent' => 0, 'service_percent' => 0, 'pickup_slot_minutes' => 15, 'pickup_capacity_per_slot' => 10, 'order_ahead_enabled' => true, 'weather_widget' => true, 'block_out_of_stock' => true, 'is_active' => true])) !!}<button class="btn btn-primary">Tambah cabang</button></form></div>
   </details>
 </div>
 @endsection

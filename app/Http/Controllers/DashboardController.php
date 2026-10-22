@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Catalog\MenuStockService;
 use App\Domain\Inventory\InventoryService;
 use App\Models\CashClosing;
 use App\Models\InventoryItem;
@@ -13,7 +14,7 @@ use Illuminate\Http\Request;
 /** @2026-Alifiandra */
 class DashboardController extends Controller
 {
-    public function index(InventoryService $inventory)
+    public function index(InventoryService $inventory, MenuStockService $menuStock)
     {
         $branchId = $this->branchId();
         $today = Order::forBranch()->whereDate('created_at', today());
@@ -54,7 +55,12 @@ class DashboardController extends Controller
         $pendingWaste = WasteRecord::forBranch()->where('status', 'pending')->count();
         $pendingClosing = CashClosing::forBranch()->where('approval_status', 'pending')->count();
 
-        return view('dashboard', compact('stats', 'trend', 'top', 'lowStock', 'pendingWaste', 'pendingClosing'));
+        $menus = \App\Models\Menu::where('is_active', true)->orderBy('name')->get();
+        $menuStock = collect($menuStock->forBranch($this->branch(), $menus))
+            ->filter(fn ($s) => $s['stock'] !== null && $s['stock'] <= 5)
+            ->map(fn ($s, $id) => $s + ['menu' => $menus->firstWhere('id', $id)])->sortBy('stock')->take(8);
+
+        return view('dashboard', compact('stats', 'trend', 'top', 'lowStock', 'pendingWaste', 'pendingClosing', 'menuStock'));
     }
 
     public function switchBranch(Request $request)
