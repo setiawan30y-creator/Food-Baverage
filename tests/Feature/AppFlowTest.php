@@ -47,8 +47,8 @@ class AppFlowTest extends TestCase
     public function test_every_page_renders_for_owner(): void
     {
         $owner = $this->user();
-        $menu = $this->idOf(Menu::class, ['name' => 'Nasi Ayam Geprek']);
-        $item = $this->idOf(InventoryItem::class, ['name' => 'Beras']);
+        $menu = $this->idOf(Menu::class, ['name' => 'Corndog Mozzarella']);
+        $item = $this->idOf(InventoryItem::class, ['name' => 'Kentang beku shoestring']);
         $sub = $this->idOf(Recipe::class, ['type' => 'sub_recipe']);
         $emp = $this->idOf(Employee::class, ['code' => 'K001']);
         $urls = [
@@ -70,9 +70,9 @@ class AppFlowTest extends TestCase
     public function test_pos_order_pay_kitchen_and_closing(): void
     {
         $cashier = $this->user('kasir@contoh.test');
-        $menu = $this->idOf(Menu::class, ['name' => 'Nasi Ayam Geprek']);
+        $menu = $this->idOf(Menu::class, ['name' => 'Corndog Mozzarella']);
         $mods = $menu->modifiers()->withoutGlobalScopes()->pluck('id')->take(1)->all();
-        $nasi = $this->idOf(InventoryItem::class, ['name' => 'Nasi putih matang']);
+        $nasi = $this->idOf(InventoryItem::class, ['name' => 'Adonan corndog']);
         $before = (float) StockMovement::withoutGlobalScopes()->where('inventory_item_id', $nasi->id)->sum('qty');
 
         $this->actingAs($cashier)->post('/cashier/open', ['opening_cash' => 100000])->assertRedirect();
@@ -81,7 +81,7 @@ class AppFlowTest extends TestCase
         $r1 = $this->actingAs($cashier)->postJson('/pos/orders', $payload)->assertOk()->json();
         $r2 = $this->actingAs($cashier)->postJson('/pos/orders', $payload)->assertOk()->json();
         $this->assertSame($r1['id'], $r2['id'], 'Idempotency harus mencegah pesanan ganda');
-        $this->assertEquals(40000, $r1['total']);
+        $this->assertEquals(36000, $r1['total']);
 
         // harga dari klien diabaikan — server menghitung sendiri
         $order = Order::withoutGlobalScopes()->find($r1['id']);
@@ -90,11 +90,11 @@ class AppFlowTest extends TestCase
         $this->actingAs($cashier)->postJson("/orders/{$order->id}/pay", ['method' => 'cash', 'received' => 30000])->assertStatus(422);
         $this->actingAs($cashier)->postJson("/orders/{$order->id}/pay", ['method' => 'qris'])->assertStatus(422); // referensi wajib
         $pay = $this->actingAs($cashier)->postJson("/orders/{$order->id}/pay", ['method' => 'cash', 'received' => 50000, 'idempotency_key' => 'p-1'])->assertOk()->json();
-        $this->assertEquals(10000, $pay['change']);
+        $this->assertEquals(14000, $pay['change']);
         $this->actingAs($cashier)->postJson("/orders/{$order->id}/pay", ['method' => 'cash', 'received' => 50000, 'idempotency_key' => 'p-1'])->assertOk();
 
         $after = (float) StockMovement::withoutGlobalScopes()->where('inventory_item_id', $nasi->id)->sum('qty');
-        $this->assertEqualsWithDelta($before - 500, $after, 0.01, 'Stok nasi berkurang 2×250 g');
+        $this->assertEqualsWithDelta($before - 180, $after, 0.01, 'Stok adonan corndog berkurang 2×90 g');
 
         // KDS
         $kitchen = $this->user('dapur@contoh.test');
@@ -108,14 +108,14 @@ class AppFlowTest extends TestCase
 
         // Kas keluar lalu closing per pecahan dengan selisih
         $this->actingAs($cashier)->post('/cashier/movements', ['type' => 'expense', 'amount' => 5000, 'note' => 'Beli es batu'])->assertRedirect();
-        $this->actingAs($cashier)->get('/cashier/close')->assertOk()->assertSee('135.000');
+        $this->actingAs($cashier)->get('/cashier/close')->assertOk()->assertSee('131.000');
         $this->actingAs($cashier)->post('/cashier/close', ['count_method' => 'denomination', 'denominations' => [100000 => 1, 20000 => 1, 10000 => 1]])
             ->assertRedirect(); // tanpa alasan → ditolak (redirect back with error)
         $this->assertSame(0, CashClosing::withoutGlobalScopes()->count());
         $this->actingAs($cashier)->post('/cashier/close', ['count_method' => 'denomination', 'denominations' => [100000 => 1, 20000 => 1, 10000 => 1], 'reason' => 'Kurang kembalian'])->assertRedirect();
         $closing = CashClosing::withoutGlobalScopes()->firstOrFail();
-        $this->assertEquals(135000, (float) $closing->expected_cash);
-        $this->assertEquals(-5000, (float) $closing->difference);
+        $this->assertEquals(131000, (float) $closing->expected_cash);
+        $this->assertEquals(-1000, (float) $closing->difference);
         $this->assertSame('pending', $closing->approval_status);
         $this->actingAs($cashier)->get("/closings/{$closing->id}")->assertOk();
 
@@ -173,16 +173,16 @@ class AppFlowTest extends TestCase
         $this->get(parse_url($r['track_url'], PHP_URL_PATH))->assertOk()->assertSee($order->number);
 
         tenancy()->clear();
-        $this->get('/o/warung-contoh')->assertOk()->assertSee('Cabang Utama');
+        $this->get('/o/kedai-snack')->assertOk()->assertSee('Cabang Utama');
         $branch = $this->idOf(Branch::class, ['code' => 'UTM']);
         tenancy()->clear();
-        $page = $this->get("/o/warung-contoh/{$branch->id}")->assertOk();
-        $this->postJson("/o/warung-contoh/{$branch->id}", ['idempotency_key' => 'oa-1', 'customer_name' => 'Pemesan', 'customer_phone' => '081234567890', 'pickup' => '2000-01-01 10:00', 'items' => [['menu_id' => $menu->id, 'qty' => 1]]])
+        $page = $this->get("/o/kedai-snack/{$branch->id}")->assertOk();
+        $this->postJson("/o/kedai-snack/{$branch->id}", ['idempotency_key' => 'oa-1', 'customer_name' => 'Pemesan', 'customer_phone' => '081234567890', 'pickup' => '2000-01-01 10:00', 'items' => [['menu_id' => $menu->id, 'qty' => 1]]])
             ->assertStatus(422);
         $slot = collect(app(\App\Domain\Ordering\OrderService::class)->pickupSlots($branch))->firstWhere('full', false);
         if ($slot) {
             tenancy()->clear();
-            $this->postJson("/o/warung-contoh/{$branch->id}", ['idempotency_key' => 'oa-2', 'customer_name' => 'Pemesan', 'customer_phone' => '081234567890', 'pickup' => $slot['value'], 'marketing_consent' => true, 'items' => [['menu_id' => $menu->id, 'qty' => 1]]])->assertOk();
+            $this->postJson("/o/kedai-snack/{$branch->id}", ['idempotency_key' => 'oa-2', 'customer_name' => 'Pemesan', 'customer_phone' => '081234567890', 'pickup' => $slot['value'], 'marketing_consent' => true, 'items' => [['menu_id' => $menu->id, 'qty' => 1]]])->assertOk();
             $oa = Order::withoutGlobalScopes()->where('channel', 'order_ahead')->firstOrFail();
             $this->assertMatchesRegularExpression('/^\d{6}$/', $oa->pickup_code);
 
@@ -196,37 +196,37 @@ class AppFlowTest extends TestCase
     public function test_purchase_production_waste_and_opname(): void
     {
         $owner = $this->user();
-        $cabai = $this->idOf(InventoryItem::class, ['name' => 'Cabai rawit']);
+        $cabai = $this->idOf(InventoryItem::class, ['name' => 'Keju mozzarella']);
         $before = $cabai->avg_cost;
-        $this->actingAs($owner)->post('/purchases', ['date' => today()->toDateString(), 'action' => 'receive', 'lines' => [['inventory_item_id' => $cabai->id, 'qty' => 2, 'unit' => 'kilogram', 'price' => 90000]]])->assertRedirect();
+        $this->actingAs($owner)->post('/purchases', ['date' => today()->toDateString(), 'action' => 'receive', 'lines' => [['inventory_item_id' => $cabai->id, 'qty' => 2, 'unit' => 'kilogram', 'price' => 150000]]])->assertRedirect();
         $cabai->refresh();
         $this->assertGreaterThan($before, $cabai->avg_cost, 'HPP rata-rata naik karena harga beli lebih tinggi');
 
-        $recipe = Recipe::withoutGlobalScopes()->where('name', 'Sambal geprek racikan')->firstOrFail();
+        $recipe = Recipe::withoutGlobalScopes()->where('name', 'Adonan corndog')->firstOrFail();
         $cons = $recipe->items()->get()->mapWithKeys(fn ($l) => [$l->inventory_item_id => $l->qty])->all();
-        $this->actingAs($owner)->post('/production', ['recipe_id' => $recipe->id, 'multiplier' => 1, 'actual_yield' => 900, 'consumptions' => $cons])->assertRedirect(); // alasan wajib
-        $this->actingAs($owner)->post('/production', ['recipe_id' => $recipe->id, 'multiplier' => 1, 'actual_yield' => 900, 'consumptions' => $cons, 'variance_reason' => 'Susut'])->assertRedirect();
+        $this->actingAs($owner)->post('/production', ['recipe_id' => $recipe->id, 'multiplier' => 1, 'actual_yield' => 800, 'consumptions' => $cons])->assertRedirect(); // alasan wajib
+        $this->actingAs($owner)->post('/production', ['recipe_id' => $recipe->id, 'multiplier' => 1, 'actual_yield' => 800, 'consumptions' => $cons, 'variance_reason' => 'Susut'])->assertRedirect();
         $batch = \App\Models\ProductionBatch::withoutGlobalScopes()->latest('id')->first();
         $this->assertEquals(-100, (float) $batch->variance_qty);
         $this->actingAs($owner)->get("/production/{$batch->id}")->assertOk();
 
         // HPP menu memakai HPP sub-recipe (tanpa hitung ganda)
-        $menu = $this->idOf(Menu::class, ['name' => 'Nasi Ayam Geprek']);
+        $menu = $this->idOf(Menu::class, ['name' => 'Corndog Mozzarella']);
         $menuRecipe = $menu->recipe()->withoutGlobalScopes()->first();
         $costing = app(\App\Domain\Production\CostingService::class);
         tenancy()->setTenant(Tenant::first());
-        $sambal = InventoryItem::where('name', 'Sambal geprek racikan')->first();
-        $expected = 0;
-        foreach ($menuRecipe->items()->with('item')->get() as $l) {
-            $expected += $l->qty * ($l->item->type === 'sub_recipe' ? $sambal->id === $l->item->id ? (float) $sambal->avg_cost : $costing->itemUnitCost($l->item) : (float) $l->item->avg_cost);
-        }
+        $lines = $menuRecipe->items()->with('item')->get();
+        $this->assertTrue($lines->contains(fn ($l) => $l->item->name === 'Adonan corndog'), 'Resep memakai sub-recipe adonan');
+        $this->assertFalse($lines->contains(fn ($l) => $l->item->name === 'Tepung premix corndog'), 'Bahan mentah adonan tidak dihitung lagi');
+        $adonan = InventoryItem::where('name', 'Adonan corndog')->first();
+        $expected = $lines->sum(fn ($l) => $l->qty * ($l->item->id === $adonan->id ? (float) $adonan->avg_cost : (float) $l->item->avg_cost));
         $this->assertEqualsWithDelta($expected, $costing->recipeUnitCost($menuRecipe->fresh()), 0.01);
         tenancy()->clear();
 
         // waste besar → pending → disetujui manajer
         $owner = $this->user();
-        $ayam = $this->idOf(InventoryItem::class, ['name' => 'Ayam potong']);
-        $this->actingAs($this->user('gudang@contoh.test'))->post('/inventory/waste', ['inventory_item_id' => $ayam->id, 'qty' => 10, 'reason' => 'basi'])->assertRedirect();
+        $ayam = $this->idOf(InventoryItem::class, ['name' => 'Sosis jumbo']);
+        $this->actingAs($this->user('gudang@contoh.test'))->post('/inventory/waste', ['inventory_item_id' => $ayam->id, 'qty' => 20, 'reason' => 'basi'])->assertRedirect();
         $waste = \App\Models\WasteRecord::withoutGlobalScopes()->firstOrFail();
         $this->assertSame('pending', $waste->status);
         $this->actingAs($this->user('manajer@contoh.test'))->post("/inventory/waste/{$waste->id}/decide", ['decision' => 'approve'])->assertRedirect();
@@ -243,7 +243,7 @@ class AppFlowTest extends TestCase
         tenancy()->clear();
         $balance = (float) StockMovement::withoutGlobalScopes()->where('inventory_item_id', $ayam->id)->sum('qty');
         $this->assertEqualsWithDelta(60, $balance, 0.001);
-        $this->actingAs($owner)->get('/reports/stock')->assertOk()->assertSee('Ayam potong');
+        $this->actingAs($owner)->get('/reports/stock')->assertOk()->assertSee('Sosis jumbo');
     }
 
     public function test_schedule_attendance_and_payroll(): void
@@ -289,5 +289,18 @@ class AppFlowTest extends TestCase
         $dua = $this->idOf(Branch::class, ['code' => 'DUA']);
         $this->actingAs($owner)->post('/branch/switch', ['branch_id' => $dua->id])->assertRedirect();
         $this->actingAs($owner)->get('/pos')->assertOk()->assertSee('Cabang Dua');
+    }
+
+    public function test_snack_seeder_is_idempotent_and_menu_shows_in_pos(): void
+    {
+        $counts = fn () => [Menu::withoutGlobalScopes()->count(), Recipe::withoutGlobalScopes()->count(), \App\Models\ProductionBatch::withoutGlobalScopes()->count(), StockMovement::withoutGlobalScopes()->count()];
+        $before = $counts();
+        tenancy()->clear();
+        $this->seed(\Database\Seeders\SnackMenuSeeder::class);
+        $this->assertSame($before, $counts());
+        $this->assertSame(17, $before[0]);
+
+        $this->actingAs($this->user('kasir@contoh.test'))->get('/pos')->assertOk()
+            ->assertSee('Kentang Crispy Original')->assertSee('Kentang Spiral')->assertSee('Corndog Mozzarella')->assertSee('Paket Hemat Snack');
     }
 }

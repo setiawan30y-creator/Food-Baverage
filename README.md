@@ -54,6 +54,25 @@ php artisan serve
 Buka `http://127.0.0.1:8000` (atau `http://food-baverage.test` lewat Laragon).
 Tidak perlu `npm run build` — CSS/JS sudah siap di `public/`.
 
+### Data contoh: kedai snack
+`php artisan migrate --seed` mengisi contoh **Kedai Snack Contoh** dengan 17 menu dalam 5 kategori:
+Kentang (Crispy Original/Keju/Balado, Kentang Spiral, Spiral Keju Lumer), Corndog (Sosis, Mozzarella, Mix, Kentang),
+Camilan Lain (Chicken Popcorn, Sosis Bakar Jumbo, Churros), Paket Hemat, dan Minuman. Data ini juga mencakup pilihan tambahan
+(ukuran, saus, bumbu, level pedas, gula), 31 bahan baku dengan konversi kemasan, 5 racikan (adonan corndog, saus keju, bumbu tabur keju,
+gula kayu manis, adonan churros) beserta batch produksinya, resep tiap menu, dan HPP/margin.
+
+Untuk menambahkan menu snack ke database yang sudah berisi data (tanpa menghapus data; aman dijalankan ulang):
+
+```powershell
+php artisan db:seed --class=SnackMenuSeeder
+```
+
+Untuk mengulang dari nol (**menghapus semua data**):
+
+```powershell
+php artisan migrate:fresh --seed
+```
+
 ### Akun contoh (kata sandi: `password`)
 
 | Peran | Email |
@@ -66,7 +85,7 @@ Tidak perlu `npm run build` — CSS/JS sudah siap di `public/`.
 
 Ganti kata sandi semua akun sebelum dipakai sungguhan.
 
-Tautan pelanggan: Order Ahead `/o/warung-contoh`, QR meja dari menu **Meja & QR**.
+Tautan pelanggan: Order Ahead `/o/kedai-snack`, QR meja dari menu **Meja & QR**.
 
 ### Menjalankan tes
 
